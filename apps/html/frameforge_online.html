@@ -380,8 +380,8 @@ restore();
 <div id="ffOnlinePanel" role="dialog" aria-modal="true" aria-labelledby="ffOnlineTitle">
  <section class="ff-online-card">
   <div class="ff-online-head"><h2 id="ffOnlineTitle">Online Projects</h2><button id="ffOnlineClose" type="button">Close</button></div>
-  <p>Upload the animation currently open in FrameForge, or open a project shared through this Python server.</p>
-  <div class="ff-online-actions"><button id="ffOnlineUpload" class="primary" type="button">Upload Current Project</button><button id="ffOnlineRefresh" type="button">Refresh List</button></div>
+  <p>Save your project as a <code>.frameforge.json</code> file, then select it here to upload and open it automatically.</p>
+  <div class="ff-online-actions"><button id="ffOnlineUpload" class="primary" type="button">Select Saved Project JSON to Upload</button><input id="ffOnlineFile" type="file" accept=".json,application/json" hidden><button id="ffOnlineRefresh" type="button">Refresh List</button></div>
   <div id="ffOnlineStatus" class="ff-online-status">Checking server...</div>
   <div id="ffOnlineList" class="ff-online-list"></div>
  </section>
@@ -400,16 +400,24 @@ restore();
    for(const p of d.projects){const row=document.createElement('div');row.className='ff-online-item';row.innerHTML=`<div><strong>${esc(p.name)}</strong><div class="ff-online-meta">${p.frames||0} frames · ${bytes(p.size||0)} · ${esc(new Date(p.updatedAt).toLocaleString())}</div></div><button type="button">Open</button>`;row.querySelector('button').onclick=()=>openProject(p.id,p.name);list.appendChild(row)}
   }catch(e){tell('Server not available. Start frameforge_server.py and open FrameForge through its web address.',true);list.innerHTML=''}
  }
- async function upload(){
-  try{if(typeof payload!=='function')throw Error('Project exporter is not available');const p=payload();p.name=(document.getElementById('projectName')?.value||p.name||'Untitled Animation').trim();tell('Uploading project...');const d=await api('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});tell(`Uploaded “${d.project.name}”. Anyone using this server can open it.`);await refresh()}
+ async function upload(file){
+  try{
+   const p=JSON.parse(await file.text());
+   if(!p||typeof p!=='object'||p.app!=='FrameForge'||!Array.isArray(p.frames)||!p.frames.length)throw Error('Select a saved FrameForge project JSON file with at least one frame.');
+   tell(`Uploading “${p.name||file.name}”...`);
+   const d=await api('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+   const opened=await openProject(d.project.id,d.project.name,false,d.openUrl);
+   if(!opened){tell(`Uploaded “${d.project.name}”, but it could not be opened automatically. It is still in the shared project list.`,true);return}
+   await refresh();panel.classList.remove('open');tell(`Uploaded and opened “${d.project.name}”.`);
+  }
   catch(e){tell(`Upload failed: ${e.message}`,true)}
  }
- async function openProject(id,name){
-  if(!confirm(`Open “${name}”? Your current unsaved canvas will be replaced.`))return;
-  try{tell(`Opening “${name}”...`);const p=await api('/api/projects/'+encodeURIComponent(id));if(typeof loadPayload!=='function')throw Error('Project loader is not available');await loadPayload(p);tell(`Opened “${name}”. A local browser copy was also created.`);panel.classList.remove('open')}
-  catch(e){tell(`Could not open project: ${e.message}`,true)}
+ async function openProject(id,name,confirmBeforeOpen=true,openUrl=''){
+  if(confirmBeforeOpen&&!confirm(`Open “${name}”? Your current unsaved canvas will be replaced.`))return false;
+  try{tell(`Opening “${name}”...`);const url=openUrl.startsWith('/api/projects/')?openUrl:'/api/projects/'+encodeURIComponent(id),p=await api(url);if(typeof loadPayload!=='function')throw Error('Project loader is not available');await loadPayload(p);tell(`Opened “${name}”. A local browser copy was also created.`);panel.classList.remove('open');return true}
+  catch(e){tell(`Could not open project: ${e.message}`,true);return false}
  }
- $o('ffOnlineButton').onclick=()=>{panel.classList.add('open');refresh()};$o('ffOnlineClose').onclick=()=>panel.classList.remove('open');$o('ffOnlineRefresh').onclick=refresh;$o('ffOnlineUpload').onclick=upload;
+ $o('ffOnlineButton').onclick=()=>{panel.classList.add('open');refresh()};$o('ffOnlineClose').onclick=()=>panel.classList.remove('open');$o('ffOnlineRefresh').onclick=refresh;$o('ffOnlineUpload').onclick=()=>$o('ffOnlineFile').click();$o('ffOnlineFile').onchange=event=>{const file=event.target.files[0];if(file)upload(file);event.target.value=''};
  panel.addEventListener('click',e=>{if(e.target===panel)panel.classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.classList.remove('open')});
 })();
 </script>

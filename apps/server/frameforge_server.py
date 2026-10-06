@@ -118,7 +118,11 @@ class Handler(SimpleHTTPRequestHandler):
         final = PROJECTS / (project_id + ".json")
         temp.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         os.replace(temp, final)
-        self.send_json(201, {"ok": True, "project": project_summary(final)})
+        self.send_json(201, {
+            "ok": True,
+            "project": project_summary(final),
+            "openUrl": f"/api/projects/{project_id}",
+        })
 
 
 def local_ip():
