@@ -7,7 +7,7 @@ import argparse, json, os, re, socket, threading, time, uuid, webbrowser
 
 ROOT = Path(__file__).resolve().parent
 PROJECTS = ROOT / "frameforge_online_projects"
-MAX_UPLOAD = 25 * 1024 * 1024
+MAX_UPLOAD = 100 * 1024 * 1024
 HTML_HINT = "frameforge_online"
 
 
@@ -96,8 +96,10 @@ class Handler(SimpleHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             length = 0
-        if length <= 0 or length > MAX_UPLOAD:
-            self.send_json(413, {"error": "Project must be between 1 byte and 25 MB"}); return
+        if length <= 0:
+            self.send_json(400, {"error": "Project upload was empty"}); return
+        if length > MAX_UPLOAD:
+            self.send_json(413, {"error": "Project exceeds the 100 MiB server upload limit"}); return
         try:
             data = json.loads(self.rfile.read(length).decode("utf-8"))
         except Exception:
