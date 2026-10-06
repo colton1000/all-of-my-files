@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NovaChat — GPT‑4o API Playground</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #1f2937;
+      background: #020617;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    header span {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    main {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .sidebar {
+      width: 320px;
+      border-right: 1px solid #1f2937;
+      padding: 16px;
+      box-sizing: border-box;
+      background: #020617;
+      overflow-y: auto;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+    }
+
+    .control-label-row span.value {
+      color: #a5b4fc;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+    }
+
+    input[type="range"], input[type="text"] {
+      width: 100%;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .toggle-row label {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toggle-row small {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 22px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #4b5563;
+      transition: .2s;
+      border-radius: 999px;
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    .switch input:checked + .slider-switch {
+      background-color: #4f46e5;
+    }
+
+    .switch input:checked + .slider-switch:before {
+      transform: translateX(18px);
+    }
+
+    .chat-window {
+      flex: 1;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      background: radial-gradient(circle at top left, #111827, #020617);
+    }
+
+    .message {
+      max-width: 70%;
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      margin-left: auto;
+      background: #4b5563;
+      border-bottom-right-radius: 2px;
+    }
+
+    .message.ai {
+      margin-right: auto;
+      background: #111827;
+      border-bottom-left-radius: 2px;
+      border: 1px solid #1f2937;
+    }
+
+    .meta {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .input-bar {
+      padding: 10px 16px;
+      border-top: 1px solid #1f2937;
+      background: #020617;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-bar textarea {
+      flex: 1;
+      resize: none;
+      height: 48px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .input-bar button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: #e5e7eb;
+    }
+
+    .btn-primary:disabled {
+      background: #312e81;
+      cursor: default;
+      opacity: 0.7;
+    }
+
+    .options-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .options-row label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #d1d5db;
+    }
+
+    .options-row input[type="checkbox"] {
+      accent-color: #4f46e5;
+    }
+
+    .small-input-label {
+      font-size: 0.8rem;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      color: #9ca3af;
+    }
+
+    #systemPrompt {
+      background: #020617;
+      border: 1px solid #1f2937;
+      border-radius: 6px;
+      color: #e5e7eb;
+      padding: 6px 8px;
+      font-size: 0.8rem;
+      resize: vertical;
+      min-height: 60px;
+      max-height: 120px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .status-bar {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #1f2937;
+      }
+
+      .message {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>NovaChat — GPT‑4o (AIMLAPI)</h1>
+      <span>Live API playground with adjustable parameters</span>
+    </div>
+    <div style="font-size:0.8rem;color:#9ca3af;">
+      Model: gpt‑4o · Non‑streaming
+    </div>
+  </header>
+
+  <main>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="section-title">API settings</div>
+
+      <div class="small-input-label">API key (local only)</div>
+      <input
+        type="text"
+        id="apiKeyInput"
+        placeholder="YOUR_API_KEY_HERE"
+        style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #1f2937;background:#020617;color:#e5e7eb;font-size:0.8rem;"
+      />
+
+      <div class="small-input-label">System prompt</div>
+      <textarea id="systemPrompt">
+You are a travel agent. Be descriptive and helpful.
+      </textarea>
+
+      <div class="section-title" style="margin-top:16px;">Model parameters</div>
+
+      <!-- Max Tokens -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <span>Max Tokens</span>
+          <span class="value" id="maxTokensValue">512</span>
+        </div>
+        <input type="range" id="maxTokens" min="1" max="8193" value="512" step="1">
+      </div>
+
+      <!-- Top P -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <span>Top P</span>
+          <span class="value" id="topPValue">0.80</span>
+        </div>
+        <input type="range" id="topP" min="0" max="1" value="0.8" step="0.01">
+      </div>
+
+      <!-- Temperature -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <span>Temperature</span>
+          <span class="value" id="temperatureValue">0.20</span>
+        </div>
+        <input type="range" id="temperature" min="0" max="1" value="0.2" step="0.01">
+      </div>
+
+      <!-- Reasoning toggle -->
+      <div class="control-group">
+        <div class="toggle-row">
+          <label>
+            Reasoning Mode
+            <small>Adds “think step‑by‑step” to system</small>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="reasoningToggle">
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Style options -->
+      <div class="section-title">Style options</div>
+      <div class="control-group">
+        <div class="options-row">
+          <label>
+            <input type="checkbox" id="emojiToggle" checked>
+            Emoji enabled
+          </label>
+        </div>
+        <div class="options-row">
+          <label>
+            <input type="checkbox" id="boldToggle">
+            Use bold sometimes
+          </label>
+        </div>
+      </div>
+
+      <div class="status-bar" id="statusBar">
+        Ready · not connected yet
+      </div>
+    </aside>
+
+    <!-- CHAT -->
+    <section class="content">
+      <div id="chatWindow" class="chat-window">
+        <div class="meta">NovaChat · System</div>
+        <div class="message ai">
+          Hi, I’m NovaChat connected to GPT‑4o via AIMLAPI.  
+          Enter your API key on the left, tune the sliders, and ask me about any place in the world.
+        </div>
+      </div>
+
+      <div class="input-bar">
+        <textarea id="userInput" placeholder="Ask NovaChat something... (Enter to send, Shift+Enter for new line)"></textarea>
+        <button id="sendBtn" class="btn-primary">
+          <span>Send</span> <span>➤</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // === BASIC CONFIG (endpoint) ===
+    const baseURL = "https://api.aimlapi.com/v1";
+
+    const apiKeyInput = document.getElementById("apiKeyInput");
+    const systemPromptInput = document.getElementById("systemPrompt");
+
+    const maxTokensSlider = document.getElementById("maxTokens");
+    const topPSlider = document.getElementById("topP");
+    const temperatureSlider = document.getElementById("temperature");
+    const maxTokensValue = document.getElementById("maxTokensValue");
+    const topPValue = document.getElementById("topPValue");
+    const temperatureValue = document.getElementById("temperatureValue");
+
+    const reasoningToggle = document.getElementById("reasoningToggle");
+    const emojiToggle = document.getElementById("emojiToggle");
+    const boldToggle = document.getElementById("boldToggle");
+
+    const chatWindow = document.getElementById("chatWindow");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusBar = document.getElementById("statusBar");
+
+    // === SLIDER LABEL UPDATES ===
+    maxTokensSlider.addEventListener("input", () => {
+      maxTokensValue.textContent = maxTokensSlider.value;
+    });
+
+    topPSlider.addEventListener("input", () => {
+      topPValue.textContent = Number(topPSlider.value).toFixed(2);
+    });
+
+    temperatureSlider.addEventListener("input", () => {
+      temperatureValue.textContent = Number(temperatureSlider.value).toFixed(2);
+    });
+
+    // === CHAT UI HELPERS ===
+    function appendMessage(role, text, metaText) {
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = metaText || (role === "user" ? "You" : "NovaChat");
+
+      const bubble = document.createElement("div");
+      bubble.className = "message " + (role === "user" ? "user" : "ai");
+
+      // Simple bold markdown support: **text**
+      const html = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      bubble.innerHTML = html;
+
+      chatWindow.appendChild(meta);
+      chatWindow.appendChild(bubble);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function setStatus(text) {
+      statusBar.textContent = text;
+    }
+
+    // === BUILD SYSTEM PROMPT WITH TOGGLES ===
+    function buildSystemPrompt() {
+      let prompt = systemPromptInput.value.trim();
+      if (!prompt) {
+        prompt = "You are a travel agent. Be descriptive and helpful.";
+      }
+      if (reasoningToggle.checked) {
+        prompt += " Think step by step and explain your reasoning clearly.";
+      }
+      if (emojiToggle.checked) {
+        prompt += " You may use emoji sometimes to be friendly and expressive.";
+      }
+      if (boldToggle.checked) {
+        prompt += " You may occasionally use **bold** to highlight key ideas.";
+      }
+      return prompt;
+    }
+
+    // === CALL REAL API ===
+    async function callNovaAPI(userMessage) {
+      const apiKey = apiKeyInput.value.trim();
+
+      if (!apiKey) {
+        throw new Error("Please enter your API key in the sidebar first.");
+      }
+
+      const body = {
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: buildSystemPrompt() },
+          { role: "user", content: userMessage }
+        ],
+        max_tokens: parseInt(maxTokensSlider.value, 10),
+        temperature: parseFloat(temperatureSlider.value),
+        top_p: parseFloat(topPSlider.value),
+        stream: false
+      };
+
+      const response = await fetch(baseURL + "/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + apiKey
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error("API error: " + response.status + " — " + errorText);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || "(No content returned)";
+      return content;
+    }
+
+    // === SEND MESSAGE HANDLER ===
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      appendMessage("user", text, "You · message");
+      userInput.value = "";
+      userInput.focus();
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Thinking...";
+      setStatus("Calling API…");
+
+      const metaParams =
+        `NovaChat · gpt‑4o · temp ${Number(temperatureSlider.value).toFixed(2)}, ` +
+        `top p ${Number(topPSlider.value).toFixed(2)}, reasoning ${reasoningToggle.checked ? "on" : "off"}`;
+
+      try {
+        const reply = await callNovaAPI(text);
+        appendMessage("ai", reply, metaParams);
+        setStatus("Ready · last call OK");
+      } catch (err) {
+        console.error(err);
+        appendMessage("ai", "Oops, I ran into an error:\n\n" + err.message, "NovaChat · error");
+        setStatus("Error · see last message");
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = "<span>Send</span> <span>➤</span>";
+      }
+    }
+
+    // Button click
+    sendBtn.addEventListener("click", sendMessage);
+
+    // Enter to send, Shift+Enter for newline
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>

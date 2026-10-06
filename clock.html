@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Tracker & World Clock</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-color: #e94560;
+            --accent-color: #0f3460;
+            --highlight: #ffffff;
+            --particle-color: #ffffff;
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            transition: all 0.8s ease;
+        }
+
+        /* ============ THEMES ============ */
+        body.theme-default {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-color: #e94560;
+            --accent-color: #0f3460;
+            --highlight: #ffffff;
+        }
+
+        body.theme-christmas {
+            --bg-color: #0b2d2b;
+            --card-bg: #1a4d48;
+            --text-color: #e63946;
+            --accent-color: #144d40;
+            --highlight: #a8dadc;
+            --gradient-1: #1d4d4a;
+            --gradient-2: #0b2d2b;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-newyear {
+            --bg-color: #000000;
+            --card-bg: #1a1a1a;
+            --text-color: #ffd700;
+            --accent-color: #333333;
+            --highlight: #e0e0e0;
+            background: linear-gradient(135deg, #000000, #1a1a1a, #000000);
+        }
+
+        body.theme-halloween {
+            --bg-color: #1a0a0a;
+            --card-bg: #2d1515;
+            --text-color: #ff9f1c;
+            --accent-color: #6a040f;
+            --highlight: #d9d9d9;
+            --gradient-1: #2d1515;
+            --gradient-2: #1a0a0a;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-stpatricks {
+            --bg-color: #004d00;
+            --card-bg: #003300;
+            --text-color: #00cc00;
+            --accent-color: #006600;
+            --highlight: #90ee90;
+            --gradient-1: #004d00;
+            --gradient-2: #002600;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-groundhog {
+            --bg-color: #8B4513;
+            --card-bg: #654321;
+            --text-color: #FFE4B5;
+            --accent-color: #5D3A1A;
+            --highlight: #FFF8DC;
+            --gradient-1: #8B4513;
+            --gradient-2: #5D3A1A;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-valentine {
+            --bg-color: #8B0000;
+            --card-bg: #660000;
+            --text-color: #FFB6C1;
+            --accent-color: #B22222;
+            --highlight: #FFF0F5;
+            --gradient-1: #8B0000;
+            --gradient-2: #4a0020;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-leapday {
+            --bg-color: #2e8b57;
+            --card-bg: #1a5235;
+            --text-color: #ADFF2F;
+            --accent-color: #006400;
+            --highlight: #7fff00;
+            --gradient-1: #2e8b57;
+            --gradient-2: #1a5235;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-easter {
+            --bg-color: #87CEEB;
+            --card-bg: #B0E0E6;
+            --text-color: #FF69B4;
+            --accent-color: #98FB98;
+            --highlight: #FFFFFF;
+            --gradient-1: #E0F7FF;
+            --gradient-2: #98FB98;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+        }
+
+        body.theme-stpatricks {
+            --bg-color: #004d00;
+            --card-bg: #003300;
+            --text-color: #00cc00;
+            --accent-color: #006600;
+            --highlight: #90ee90;
+            background: linear-gradient(135deg, #004d00, #002600);
+        }
+
+        body.theme-thanksgiving {
+            --bg-color: #8B4513;
+            --card-bg: #A0522D;
+            --text-color: #FF6600;
+            --accent-color: #CD853F;
+            --highlight: #FFFACD;
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+        }
+
+        body.theme-independence {
+            --bg-color: #1a1a3e;
+            --card-bg: #2a2a5e;
+            --text-color: #FF0000;
+            --accent-color: #0000FF;
+            --highlight: #FFFFFF;
+            background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
+        }
+
+        body.theme-earthday {
+            --bg-color: #228B22;
+            --card-bg: #006400;
+            --text-color: #90EE90;
+            --accent-color: #004d00;
+            --highlight: #ADFF2F;
+            background: linear-gradient(135deg, #228B22, #006400);
+        }
+
+        body.theme-aprilfools {
+            --bg-color: #FF69B4;
+            --card-bg: #FF1493;
+            --text-color: #FFFF00;
+            --accent-color: #00FFFF;
+            --highlight: #FFFFFF;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+        }
+
+        body.theme-summer {
+            --bg-color: #FF8C00;
+            --card-bg: #FFA500;
+            --text-color: #FFFFFF;
+            --accent-color: #FFD700;
+            --highlight: #FFFACD;
+            background: linear-gradient(135deg, #FF8C00, #FFA500);
+        }
+
+        body.theme-default {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-color: #e94560;
+            --accent-color: #0f3460;
+            --highlight: #ffffff;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* ============ CONTAINER ============ */
+        .container {
+            width: 95%;
+            max-width: 1000px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        /* ============ HEADER ============ */
+        .header {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .current-holiday-badge {
+            background: var(--text-color);
+            color: var(--bg-color);
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .current-holiday-badge.pulse {
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 25px rgba(0,0,0,0.4); }
+        }
+
+        /* ============ CLOCK STYLES ============ */
+        .clock-section {
+            margin: 30px 0;
+        }
+
+        .clock-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .clock-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--text-color);
+            color: var(--text-color);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .clock-btn:hover, .clock-btn.active {
+            background: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        .digital-clock {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+            letter-spacing: 5px;
+        }
+
+        .digital-clock .date {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+
+        /* Analog Clock */
+        .analog-clock-container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .analog-clock {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 5px solid var(--text-color);
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 50px rgba(0,0,0,0.3);
+        }
+
+        .clock-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 5px;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 70px;
+            background: var(--highlight);
+            margin-left: -3px;
+            z-index: 3;
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 95px;
+            background: var(--text-color);
+            margin-left: -2px;
+            z-index: 4;
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 110px;
+            background: #ff0000;
+            margin-left: -1px;
+            z-index: 5;
+        }
+
+        .clock-center {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: var(--text-color);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 6;
+        }
+
+        .clock-number {
+            position: absolute;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--highlight);
+        }
+
+        /* Binary Clock */
+        .binary-clock-container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .binary-clock {
+            display: flex;
+            gap: 20px;
+            background: #000;
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid var(--text-color);
+        }
+
+        .binary-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .binary-label {
+            color: var(--text-color);
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .binary-dots {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .binary-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #555;
+            transition: all 0.3s ease;
+        }
+
+        .binary-dot.on {
+            background: var(--text-color);
+            box-shadow: 0 0 15px var(--text-color);
+        }
+
+        /* Word Clock */
+        .word-clock-container {
+            display: none;
+            justify-content: center;
+        }
+
+        .word-clock {
+            font-size: 2.5rem;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid var(--text-color);
+            line-height: 1.8;
+        }
+
+        .word-clock .word {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .word-clock .word.active {
+            background: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        /* Roman Numeral Clock */
+        .roman-clock-container {
+            display: none;
+            justify-content: center;
+        }
+
+        .roman-numeral-display {
+            font-family: 'Times New Roman', serif;
+            font-size: 4rem;
+            color: var(--highlight);
+            background: var(--card-bg);
+            padding: 30px 60px;
+            border-radius: 20px;
+            border: 3px solid var(--text-color);
+        }
+
+        .roman-label {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin-top: 10px;
+        }
+
+        /* ============ INFO CARDS ============ */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: var(--text-color);
+            margin-top: 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .next-holiday-name {
+            font-size: 1.5rem;
+            color: var(--highlight);
+            margin: 15px 0;
+        }
+
+        .countdown {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ============ TIMEZONES ============ */
+        .timezone-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .tz-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tz-city {
+            color: var(--text-color);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .tz-time {
+            color: var(--highlight);
+            font-size: 1.4rem;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* ============ PARTICLES ============ */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .snowflake {
+            color: #fff;
+            font-size: 1.5em;
+            text-shadow: 0 0 5px #fff;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(360deg); opacity: 0.3; }
+        }
+
+        .heart {
+            color: #ff0000;
+            font-size: 2em;
+            animation: floatHeart linear forwards;
+        }
+
+        @keyframes floatHeart {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+        }
+
+        .clover {
+            color: #00cc00;
+            font-size: 1.5em;
+            animation: fallClover linear forwards;
+        }
+
+        @keyframes fallClover {
+            0% { transform: translateY(-10vh) rotate(0deg); }
+            100% { transform: translateY(105vh) rotate(360deg); }
+        }
+
+        .bat {
+            font-size: 2em;
+            animation: flyBat linear forwards;
+        }
+
+        @keyframes flyBat {
+            0% { transform: translateX(-100vw); }
+            100% { transform: translateX(100vw); }
+        }
+
+        .firework-particle {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: explode 1.5s forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .frog {
+            font-size: 2em;
+            animation: jumpFrog 1s ease-in-out infinite;
+        }
+
+        @keyframes jumpFrog {
+            0%, 100% { transform: translateY(0) scaleX(1); }
+            50% { transform: translateY(-30px) scaleX(-1); }
+        }
+
+        .egg {
+            font-size: 2em;
+            animation: bounceEgg 2s ease-in-out infinite;
+        }
+
+        @keyframes bounceEgg {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            75% { transform: translateY(-10px) rotate(-5deg); }
+        }
+
+        .groundhog-shadow {
+            font-size: 3em;
+            animation: shadowPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes shadowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.3); opacity: 0.6; }
+        }
+
+        .leaf {
+            font-size: 1.5em;
+            color: #ff6600;
+            animation: fallLeaf linear forwards;
+        }
+
+        @keyframes fallLeaf {
+            0% { transform: translateY(-10vh) rotate(0deg) translateX(0); }
+            100% { transform: translateY(105vh) rotate(360deg) translateX(100px); }
+        }
+
+        .star {
+            font-size: 1.5em;
+            color: #ffd700;
+            animation: twinkle 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .bunny {
+            font-size: 2em;
+            animation: hopBunny 1s ease-in-out infinite;
+        }
+
+        @keyframes hopBunny {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        .flower {
+            font-size: 1.8em;
+            animation: swayFlower 2s ease-in-out infinite;
+        }
+
+        @keyframes swayFlower {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        /* ============ HOLIDAYS LIST ============ */
+        .holidays-list {
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .holidays-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .holidays-list li:last-child {
+            border-bottom: none;
+        }
+
+        .upcoming-holiday {
+            color: var(--highlight);
+            font-weight: bold;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .digital-clock {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .analog-clock {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .hour-hand { height: 50px; }
+            .minute-hand { height: 75px; }
+            .second-hand { height: 90px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particle-container"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="current-holiday-badge pulse" id="status-badge">🎉 Current: Default Mode</div>
+            <h1 id="main-greeting">Time & Holiday Tracker</h1>
+        </div>
+
+        <!-- Clock Section -->
+        <div class="clock-section">
+            <div class="clock-selector">
+                <button class="clock-btn active" onclick="setClockStyle('digital')">Digital</button>
+                <button class="clock-btn" onclick="setClockStyle('analog')">Analog</button>
+                <button class="clock-btn" onclick="setClockStyle('binary')">Binary</button>
+                <button class="clock-btn" onclick="setClockStyle('word')">Word</button>
+                <button class="clock-btn" onclick="setClockStyle('roman')">Roman</button>
+            </div>
+
+            <!-- Digital Clock -->
+            <div id="digital-clock" class="digital-clock-container">
+                <div>
+                    <div id="digital-time">00:00:00</div>
+                    <div id="digital-date" class="date">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Analog Clock -->
+            <div id="analog-clock" class="analog-clock-container">
+                <div class="analog-clock">
+                    <div class="clock-face">
+                        <div class="clock-number" style="top: 10px; left: 50%; transform: translateX(-50%);">12</div>
+                        <div class="clock-number" style="top: 25%; right: 15px;">3</div>
+                        <div class="clock-number" style="bottom: 10px; left: 50%; transform: translateX(-50%);">6</div>
+                        <div class="clock-number" style="top: 25%; left: 15px;">9</div>
+                    </div>
+                    <div class="hand hour-hand" id="hour-hand"></div>
+                    <div class="hand minute-hand" id="minute-hand"></div>
+                    <div class="hand second-hand" id="second-hand"></div>
+                    <div class="clock-center"></div>
+                </div>
+            </div>
+
+            <!-- Binary Clock -->
+            <div id="binary-clock" class="binary-clock-container">
+                <div class="binary-clock">
+                    <div class="binary-column">
+                        <div class="binary-label">H</div>
+                        <div class="binary-dots" id="binary-hours"></div>
+                    </div>
+                    <div class="binary-column">
+                        <div class="binary-label">M</div>
+                        <div class="binary-dots" id="binary-minutes"></div>
+                    </div>
+                    <div class="binary-column">
+                        <div class="binary-label">S</div>
+                        <div class="binary-dots" id="binary-seconds"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Word Clock -->
+            <div id="word-clock" class="word-clock-container">
+                <div class="word-clock">
+                    <div id="word-display"></div>
+                </div>
+            </div>
+
+            <!-- Roman Numeral Clock -->
+            <div id="roman-clock" class="roman-clock-container">
+                <div>
+                    <div class="roman-numeral-display" id="roman-time">XII:XX:XX</div>
+                    <div class="roman-label" id="roman-date">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="info-grid">
+            <!-- Next Holiday Card -->
+            <div class="card">
+                <h3>📅 Next Holiday</h3>
+                <div class="next-holiday-name" id="next-holiday-name">-</div>
+                <div class="countdown" id="countdown">-- Days --:--:--</div>
+            </div>
+
+            <!-- Countdown Details -->
+            <div class="card">
+                <h3>⏰ Time Remaining</h3>
+                <div id="countdown-details">
+                    <p>Days: <span id="cd-days">-</span></p>
+                    <p>Hours: <span id="cd-hours">-</span></p>
+                    <p>Minutes: <span id="cd-minutes">-</span></p>
+                    <p>Seconds: <span id="cd-seconds">-</span></p>
+                </div>
+            </div>
+
+            <!-- Upcoming Holidays -->
+            <div class="card">
+                <h3>📋 Upcoming Holidays</h3>
+                <ul class="holidays-list" id="holidays-list">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+
+            <!-- World Clocks -->
+            <div class="card">
+                <h3>🌍 World Clocks</h3>
+                <div class="timezone-grid" id="timezone-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONFIGURATION ============
+        const currentYear = new Date().getFullYear();
+        let currentClockStyle = 'digital';
+
+        // Timezones
+        const timezones = [
+            { city: 'New York (EST)', zone: 'America/New_York' },
+            { city: 'London (GMT)', zone: 'Europe/London' },
+            { city: 'Tokyo (JST)', zone: 'Asia/Tokyo' },
+            { city: 'Sydney (AEST)', zone: 'Australia/Sydney' },
+            { city: 'Dubai (GST)', zone: 'Asia/Dubai' },
+            { city: 'Paris (CET)', zone: 'Europe/Paris' },
+            { city: 'Los Angeles (PST)', zone: 'America/Los_Angeles' },
+            { city: 'Singapore (SGT)', zone: 'Asia/Singapore' }
+        ];
+
+        // Holidays - Each has name, month (0-11), day, theme, and special icon
+        const holidays = [];
+
+        // Generate all holidays
+        function generateHolidays() {
+            holidays.length = 0;
+            
+            // Fixed date holidays
+            const fixedHolidays = [
+                { name: "New Year's Day", month: 0, day: 1, theme: 'newyear', icon: '🎆' },
+                { name: "Groundhog Day", month: 1, day: 2, theme: 'groundhog', icon: '🦫' },
+                { name: "Valentine's Day", month: 1, day: 14, theme: 'valentine', icon: '💕' },
+                { name: "Leap Day", month: 1, day: 29, theme: 'leapday', icon: '🐸' },
+                { name: "St. Patrick's Day", month: 2, day: 17, theme: 'stpatricks', icon: '🍀' },
+                { name: "April Fools' Day", month: 3, day: 1, theme: 'aprilfools', icon: '🤡' },
+                { name: "Earth Day", month: 3, day: 22, theme: 'earthday', icon: '🌍' },
+                { name: "Cinco de Mayo", month: 4, day: 5, theme: 'summer', icon: '🌮' },
+                { name: "Independence Day (USA)", month: 6, day: 4, theme: 'independence', icon: '🎆' },
+                { name: "Halloween", month: 9, day: 31, theme: 'halloween', icon: '🎃' },
+                { name: "Veterans Day", month: 10, day: 11, theme: 'independence', icon: '🇺🇸' },
+                { name: "Christmas Eve", month: 11, day: 24, theme: 'christmas', icon: '🎄' },
+                { name: "Christmas Day", month: 11, day: 25, theme: 'christmas', icon: '🎅' },
+                { name: "Boxing Day", month: 11, day: 26, theme: 'christmas', icon: '📦' },
+                { name: "New Year's Eve", month: 11, day: 31, theme: 'newyear', icon: '🥂' }
+            ];
+
+            fixedHolidays.forEach(h => holidays.push(h));
+
+            // Add Easter (variable date)
+            const easter = calculateEaster(currentYear);
+            holidays.push({ 
+                name: "Easter Sunday", 
+                month: easter.getMonth(), 
+                day: easter.getDate(), 
+                theme: 'easter', 
+                icon: '🐰',
+                isEaster: true 
+            });
+
+            // Add Mother's Day (2nd Sunday of May)
+            holidays.push({ name: "Mother's Day", month: 4, day: getNthWeekday(4, 0, 2), theme: 'valentine', icon: '👩' });
+
+            // Add Father's Day (3rd Sunday of June)
+            holidays.push({ name: "Father's Day", month: 5, day: getNthWeekday(5, 0, 3), theme: 'independence', icon: '👨' });
+
+            // Add Memorial Day (Last Monday of May)
+            holidays.push({ name: "Memorial Day", month: 4, day: getLastWeekday(4, 1), theme: 'stpatricks', icon: '🕊️' });
+
+            // Add Labor Day (1st Monday of September)
+            holidays.push({ name: "Labor Day", month: 8, day: getNthWeekday(8, 1, 1), theme: 'stpatricks', icon: '✊' });
+
+            // Add Thanksgiving (4th Thursday of November)
+            holidays.push({ name: "Thanksgiving", month: 10, day: getNthWeekday(10, 4, 4), theme: 'thanksgiving', icon: '🦃' });
+
+            // Sort holidays by date
+            holidays.sort((a, b) => {
+                const dateA = new Date(currentYear, a.month, a.day);
+                const dateB = new Date(currentYear, b.month, b.day);
+                return dateA - dateB;
+            });
+        }
+
+        // Calculate Easter using Anonymous Gregorian algorithm
+        function calculateEaster(year) {
+            const a = year % 19;
+            const b = Math.floor(year / 100);
+            const c = year % 100;
+            const d = Math.floor(b / 4);
+            const e = b % 4;
+            const f = Math.floor((b + 8) / 25);
+            const g = Math.floor((b - f + 1) / 3);
+            const h = (19 * a + b - d - g + 15) % 30;
+            const i = Math.floor(c / 4);
+            const k = c % 4;
+            const l = (32 + 2 * e + 2 * i - h - k) % 7;
+            const m = Math.floor((a + 11 * h + 22 * l) / 451);
+            const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+            const day = ((h + l - 7 * m + 114) % 31) + 1;
+            return new Date(year, month, day);
+        }
+
+        // Get nth weekday of month (e.g., 2nd Sunday)
+        function getNthWeekday(month, weekday, n) {
+            const date = new Date(currentYear, month, 1);
+            let count = 0;
+            while (count < n) {
+                if (date.getDay() === weekday) count++;
+                if (count < n) date.setDate(date.getDate() + 1);
+            }
+            return date.getDate();
+        }
+
+        // Get last weekday of month
+        function getLastWeekday(month, weekday) {
+            const date = new Date(currentYear, month + 1, 0);
+            while (date.getDay() !== weekday) {
+                date.setDate(date.getDate() - 1);
+            }
+            return date.getDate();
+        }
+
+        // Convert number to Roman numerals
+        function toRoman(num) {
+            const romanNumerals = [
+                ['M', 1000], ['CM', 900], ['D', 500], ['CD', 400],
+                ['C', 100], ['XC', 90], ['L', 50], ['XL', 40],
+                ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]
+            ];
+            let result = '';
+            for (const [roman, value] of romanNumerals) {
+                while (num >= value) {
+                    result += roman;
+                    num -= value;
+                }
+            }
+            return result;
+        }
+
+        // Convert to Binary
+        function toBinary(num, digits) {
+            return num.toString(2).padStart(digits, '0');
+        }
+
+        // Get word time (IT IS / FIVE / TEN ... + MINUTES PAST/TO + HOUR)
+        function getWordTime(date) {
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            let displayHour = hours % 12 || 12;
+
+            const words = [];
+            words.push('<span class="word active">IT</span>');
+            words.push('<span class="word active">IS</span>');
+
+            const minuteWords = {
+                0: '', 5: 'FIVE', 10: 'TEN', 15: 'QUARTER',
+                20: 'TWENTY', 25: 'TWENTY FIVE', 30: 'HALF',
+                35: 'TWENTY FIVE', 40: 'TWENTY', 45: 'QUARTER',
+                50: 'TEN', 55: 'FIVE'
+            };
+
+            const prep = minutes <= 30 ? 'PAST' : 'TO';
+            
+            if (minutes === 0) {
+                words.push('<span class="word active">' + toWordNum(displayHour) + '</span>');
+                words.push('<span class="word active">O\'CLOCK</span>');
+            } else {
+                if (minutes !== 30) {
+                    words.push('<span class="word active">' + minuteWords[minutes] + '</span>');
+                }
+                words.push('<span class="word active">' + prep + '</span>');
+                if (minutes > 30) displayHour = (displayHour % 12) + 1;
+                words.push('<span class="word active">' + toWordNum(displayHour) + '</span>');
+            }
+
+            return words.join(' ');
+        }
+
+        function toWordNum(num) {
+            const words = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE'];
+            return words[num] || num.toString();
+        }
+
+        // ============ DOM ELEMENTS ============
+        const body = document.body;
+        const particleContainer = document.getElementById('particle-container');
+
+        // ============ INITIALIZATION ============
+        function init() {
+            generateHolidays();
+            renderTimezones();
+            checkTheme();
+            updateAll();
+            setInterval(updateAll, 1000);
+            setInterval(checkTheme, 60000); // Check theme every minute
+            setInterval(checkTheme, 60000);
+        }
+
+        // ============ CLOCK STYLES ============
+        function setClockStyle(style) {
+            currentClockStyle = style;
+            document.querySelectorAll('.clock-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('digital-clock').style.display = 'none';
+            document.getElementById('analog-clock').style.display = 'none';
+            document.getElementById('binary-clock').style.display = 'none';
+            document.getElementById('word-clock').style.display = 'none';
+            document.getElementById('roman-clock').style.display = 'none';
+
+            document.getElementById(style + '-clock').style.display = 'flex';
+            
+            // Initialize binary clock dots
+            if (style === 'binary') initBinaryClock();
+        }
+
+        function initBinaryClock() {
+            const containers = ['binary-hours', 'binary-minutes', 'binary-seconds'];
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                container.innerHTML = '';
+                for (let i = 3; i >= 0; i--) {
+                    const dot = document.createElement('div');
+                    dot.className = 'binary-dot';
+                    container.appendChild(dot);
+                }
+            });
+        }
+
+        function updateDigitalClock(date) {
+            const time = date.toLocaleTimeString();
+            document.getElementById('digital-time').textContent = time;
+            document.getElementById('digital-date').textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+
+        function updateAnalogClock(date) {
+            const hours = date.getHours() % 12;
+            const minutes = date.getMinutes();
+            const seconds = date.getSeconds();
+
+            const hourDeg = (hours * 30) + (minutes * 0.5);
+            const minuteDeg = minutes * 6;
+            const secondDeg = seconds * 6;
+
+            document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
+            document.getElementById('second-hand').style.transform = `rotate(${secondDeg}deg)`;
+        }
+
+        function updateBinaryClock(date) {
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const seconds = date.getSeconds();
+
+            updateBinaryColumn('binary-hours', hours, 4);
+            updateBinaryColumn('binary-minutes', minutes, 6);
+            updateBinaryColumn('binary-seconds', seconds, 6);
+        }
+
+        function updateBinaryColumn(elementId, value, bits) {
+            const binary = toBinary(value, bits);
+            const container = document.getElementById(elementId);
+            const dots = container.querySelectorAll('.binary-dot');
+            
+            // Reverse so highest bit is at top
+            for (let i = 0; i < bits; i++) {
+                if (dots[i]) {
+                    dots[i].classList.toggle('on', binary[bits - 1 - i] === '1');
+                }
+            }
+        }
+
+        function updateWordClock(date) {
+            document.getElementById('word-display').innerHTML = getWordTime(date);
+        }
+
+        function updateRomanClock(date) {
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const seconds = date.getSeconds();
+
+            const displayHour = hours % 12 || 12;
+            
+            document.getElementById('roman-time').textContent = 
+                toRoman(displayHour) + ':' + 
+                toRoman(minutes).padStart(2, 'I') + ':' + 
+                toRoman(seconds).padStart(2, 'I');
+            
+            document.getElementById('roman-date').textContent = 
+                date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+
+        // ============ THEME & HOLIDAYS ============
+        function checkTheme() {
+            const now = new Date();
+            let activeHoliday = null;
+            let nextHoliday = null;
+            let passedCount = 0;
+
+            // Clear particles
+            particleContainer.innerHTML = '';
+            body.className = '';
+
+            holidays.forEach(h => {
+                const hDate = new Date(currentYear, h.month, h.day);
+                hDate.setHours(0, 0, 0, 0);
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                // Check if today is this holiday
+                if (hDate.getTime() === today.getTime()) {
+                    activeHoliday = h;
+                }
+
+                // Track next holiday
+                if (hDate > now) {
+                    if (!nextHoliday) nextHoliday = h;
+                } else {
+                    passedCount++;
+                }
+            });
+
+            // If no next holiday this year, use first from next year
+            if (!nextHoliday) {
+                const firstNextYear = { ...holidays[0], name: holidays[0].name + ' (Next Year)' };
+                nextHoliday = firstNextYear;
+            }
+
+            // Apply theme
+            if (activeHoliday) {
+                body.classList.add(`theme-${activeHoliday.theme}`);
+                document.getElementById('status-badge').textContent = `🎉 ${activeHoliday.icon} ${activeHoliday.name}`;
+                document.getElementById('main-greeting').textContent = getGreeting(activeHoliday);
+                startAnimation(activeHoliday.theme);
+            } else {
+                document.getElementById('status-badge').textContent = '📅 No Holiday Today';
+                document.getElementById('main-greeting').textContent = 'Time & Holiday Tracker';
+                if (nextHoliday) {
+                    document.getElementById('next-holiday-name').textContent = nextHoliday.icon + ' ' + nextHoliday.name;
+                }
+            }
+
+            // Update upcoming holidays list
+            updateHolidaysList();
+        }
+
+        function getGreeting(holiday) {
+            const greetings = {
+                'New Year': '🎊 Happy New Year!',
+                'Groundhog': '🦫 Groundhog Day!',
+                'Valentine': '💕 Happy Valentine\'s Day!',
+                'Leap': '🐸 Leap Day!',
+                'St. Patrick': '🍀 St. Patrick\'s Day!',
+                'Easter': '🥚 Happy Easter!',
+                'Halloween': '🎃 Happy Halloween!',
+                'Christmas': '🎄 Merry Christmas!',
+                'Independence': '🇺🇸 Happy Independence Day!',
+                'Thanksgiving': '🦃 Happy Thanksgiving!'
+            };
+
+            for (const [key, greeting] of Object.entries(greetings)) {
+                if (holiday.name.includes(key)) return greeting;
+            }
+            return '🎉 ' + holiday.name;
+        }
+
+        function updateHolidaysList() {
+            const list = document.getElementById('holidays-list');
+            const now = new Date();
+            const upcoming = holidays.filter(h => {
+                const hDate = new Date(currentYear, h.month, h.day);
+                return hDate >= now;
+            }).slice(0, 5);
+
+            list.innerHTML = upcoming.map(h => 
+                `<li>${h.icon} <span class="upcoming-holiday">${h.name}</span> - ${formatDate(h.month, h.day)}</li>`
+            ).join('');
+        }
+
+        function formatDate(month, day) {
+            return new Date(currentYear, month, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // ============ TIMEZONES ============
+        function renderTimezones() {
+            const grid = document.getElementById('timezone-grid');
+            grid.innerHTML = timezones.map(tz => `
+                <div class="tz-card">
+                    <div class="tz-city">${tz.city}</div>
+                    <div class="tz-time" id="tz-${tz.city.split(' ')[0]}">--:--:--</div>
+                </div>
+            `).join('');
+        }
+
+        function updateTimezones(date) {
+            timezones.forEach(tz => {
+                const time = date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                    timeZone: tz.zone
+                });
+                const id = 'tz-' + tz.city.split(' ')[0];
+                const el = document.getElementById(id);
+                if (el) el.textContent = time;
+            });
+        }
+
+        // ============ COUNTDOWN ============
+        function updateCountdown() {
+            const now = new Date();
+            let nextHoliday = null;
+
+            holidays.forEach(h => {
+                const hDate = new Date(currentYear, h.month, h.day);
+                if (hDate > now && (!nextHoliday || hDate < new Date(currentYear, nextHoliday.month, nextHoliday.day))) {
+                    nextHoliday = h;
+                }
+            });
+
+            if (!nextHoliday) {
+                const first = { ...holidays[0] };
+                first.name += ' (Next Year)';
+                nextHoliday = first;
+            }
+
+            const target = new Date(currentYear, nextHoliday.month, nextHoliday.day);
+            if (target < now) target.setFullYear(currentYear + 1);
+
+            document.getElementById('next-holiday-name').textContent = (nextHoliday.icon || '📅') + ' ' + nextHoliday.name;
+
+            const diff = target - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('countdown').textContent = 
+                `${days} Days ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('cd-days').textContent = days;
+            document.getElementById('cd-hours').textContent = hours;
+            document.getElementById('cd-minutes').textContent = minutes;
+            document.getElementById('cd-seconds').textContent = seconds;
+        }
+
+        // ============ ANIMATIONS ============
+        function startAnimation(theme) {
+            // Clear existing animations
+            particleContainer.innerHTML = '';
+
+            switch(theme) {
+                case 'christmas':
+                    createSnow();
+                    break;
+                case 'newyear':
+                    setInterval(launchFirework, 2000);
+                    break;
+                case 'halloween':
+                    createBats();
+                    break;
+                case 'stpatricks':
+                    createClovers();
+                    break;
+                case 'valentine':
+                    createHearts();
+                    break;
+                case 'leapday':
+                    createFrogs();
+                    break;
+                case 'easter':
+                    createEggs();
+                    break;
+                case 'thanksgiving':
+                    createLeaves();
+                    break;
+                case 'groundhog':
+                    createGroundhogShadows();
+                    break;
+                case 'earthday':
+                    createFlowers();
+                    break;
+                case 'aprilfools':
+                    createConfetti();
+                    break;
+                case 'independence':
+                    createStars();
+                    break;
+                case 'summer':
+                    createSunbeams();
+                    break;
+                default:
+                    createFloatingDots();
+            }
+        }
+
+        function createParticle(type, style = {}) {
+            const particle = document.createElement('div');
+            particle.className = `particle ${type}`;
+            particle.textContent = style.text || '●';
+            particle.style.left = (style.x || Math.random() * 100) + 'vw';
+            particle.style.animationDuration = (style.duration || Math.random() * 3 + 2) + 's';
+            particle.style.animationDelay = (style.delay || 0) + 's';
+            if (style.fontSize) particle.style.fontSize = style.fontSize;
+            if (style.color) particle.style.color = style.color;
+            particleContainer.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), (style.duration || 3) * 1000 + 2000);
+        }
+
+        function createSnow() {
+            setInterval(() => {
+                createParticle('snowflake', { text: '❄', duration: Math.random() * 4 + 3, fontSize: (Math.random() * 1.5 + 0.8) + 'em' });
+            }, 200);
+        }
+
+        function createHearts() {
+            const heartEmojis = ['💕', '❤️', '💖', '💗', '💓', '💘', '💝'];
+            setInterval(() => {
+                const emoji = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                createParticle('heart', { text: emoji, duration: Math.random() * 5 + 4, fontSize: (Math.random() * 2 + 1) + 'em' });
+            }, 400);
+        }
+
+        function createClovers() {
+            setInterval(() => {
+                createParticle('clover', { text: '🍀', duration: Math.random() * 3 + 2 });
+            }, 300);
+        }
+
+        function createBats() {
+            setInterval(() => {
+                const bat = document.createElement('div');
+                bat.className = 'particle bat';
+                bat.textContent = '🦇';
+                bat.style.top = Math.random() * 60 + 20 + '%';
+                bat.style.animationDuration = Math.random() * 3 + 4 + 's';
+                particleContainer.appendChild(bat);
+                setTimeout(() => bat.remove(), 7000);
+            }, 800);
+        }
+
+        function launchFirework() {
+            const colors = ['#ff0000', '#ffff00', '#00ff00', '#ffffff', '#ff00ff', '#00ffff', '#ffd700'];
+            const centerX = Math.random() * window.innerWidth;
+            const centerY = Math.random() * (window.innerHeight / 2);
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle firework-particle';
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 150;
+                particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                particle.style.width = Math.random() * 8 + 4 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                particleContainer.appendChild(particle);
+                setTimeout(() => particle.remove(), 1500);
+            }
+        }
+
+        function createFrogs() {
+            const frog = document.createElement('div');
+            frog.className = 'particle frog';
+            frog.textContent = '🐸';
+            frog.style.left = Math.random() * 80 + 10 + '%';
+            frog.style.top = '80%';
+            particleContainer.appendChild(frog);
+            
+            // Animate frog jumping across
+            let pos = 10;
+            const jump = setInterval(() => {
+                pos += 5;
+                frog.style.left = pos + '%';
+                if (pos > 90) {
+                    clearInterval(jump);
+                    frog.remove();
+                }
+            }, 500);
+        }
+
+        function createEggs() {
+            const eggEmojis = ['🥚', '🐣', '🐥', '🌸'];
+            const egg = document.createElement('div');
+            egg.className = 'particle egg';
+            egg.textContent = eggEmojis[Math.floor(Math.random() * eggEmojis.length)];
+            egg.style.left = Math.random() * 80 + 10 + '%';
+            egg.style.bottom = '0';
+            particleContainer.appendChild(egg);
+            
+            // Animate bouncing up
+            let bottom = 0;
+            const bounce = setInterval(() => {
+                bottom += 10;
+                egg.style.bottom = bottom + '%';
+                egg.style.opacity = 1 - bottom / 100;
+                if (bottom > 100) {
+                    clearInterval(bounce);
+                    egg.remove();
+                }
+            }, 100);
+        }
+
+        function createGroundhogShadows() {
+            const shadow = document.createElement('div');
+            shadow.className = 'particle groundhog-shadow';
+            shadow.textContent = '🌑';
+            shadow.style.left = Math.random() * 60 + 20 + '%';
+            shadow.style.bottom = '20%';
+            particleContainer.appendChild(shadow);
+            setTimeout(() => shadow.remove(), 3000);
+        }
+
+        function createLeaves() {
+            const leafEmojis = ['🍂', '🍁', '🍃'];
+            setInterval(() => {
+                const leaf = document.createElement('div');
+                leaf.className = 'particle leaf';
+                leaf.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
+                leaf.style.left = Math.random() * 100 + '%';
+                leaf.style.animationDuration = Math.random() * 4 + 3 + 's';
+                particleContainer.appendChild(leaf);
+                setTimeout(() => leaf.remove(), 7000);
+            }, 400);
+        }
+
+        function createFlowers() {
+            const flowerEmojis = ['🌸', '🌷', '🌻', '🌺', '🌹'];
+            setInterval(() => {
+                const flower = document.createElement('div');
+                flower.className = 'particle flower';
+                flower.textContent = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+                flower.style.left = Math.random() * 100 + '%';
+                flower.style.bottom = '0';
+                flower.style.animationDuration = Math.random() * 3 + 4 + 's';
+                particleContainer.appendChild(flower);
+                setTimeout(() => flower.remove(), 7000);
+            }, 600);
+        }
+
+        function createStars() {
+            setInterval(() => {
+                const star = document.createElement('div');
+                star.className = 'particle star';
+                star.textContent = '⭐';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 50 + '%';
+                star.style.animationDuration = Math.random() * 2 + 1 + 's';
+                particleContainer.appendChild(star);
+                setTimeout(() => star.remove(), 3000);
+            }, 300);
+        }
+
+        function createConfetti() {
+            const colors = ['#FF69B4', '#00FFFF', '#FFFF00', '#FF0000', '#00FF00'];
+            setInterval(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'particle';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.animation = 'fallLeaf ' + (Math.random() * 3 + 2) + 's linear forwards';
+                particleContainer.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 5000);
+            }, 100);
+        }
+
+        function createSunbeams() {
+            setInterval(() => {
+                const sun = document.createElement('div');
+                sun.className = 'particle';
+                sun.textContent = '☀️';
+                sun.style.left = Math.random() * 100 + '%';
+                sun.style.top = '-5%';
+                sun.style.fontSize = (Math.random() * 2 + 1) + 'em';
+                sun.style.animation = 'fall ' + (Math.random() * 4 + 3) + 's linear forwards';
+                particleContainer.appendChild(sun);
+                setTimeout(() => sun.remove(), 7000);
+            }, 800);
+        }
+
+        function createFloatingDots() {
+            setInterval(() => {
+                createParticle('snowflake', { 
+                    text: '✦', 
+                    duration: Math.random() * 4 + 3, 
+                    fontSize: '1em',
+                    color: 'rgba(255,255,255,0.5)'
+                });
+            }, 500);
+        }
+
+        // ============ MAIN UPDATE ============
+        function updateAll() {
+            const now = new Date();
+
+            // Update main clocks based on style
+            switch(currentClockStyle) {
+                case 'digital': updateDigitalClock(now); break;
+                case 'analog': updateAnalogClock(now); break;
+                case 'binary': updateBinaryClock(now); break;
+                case 'word': updateWordClock(now); break;
+                case 'roman': updateRomanClock(now); break;
+            }
+
+            // Update other displays
+            updateTimezones(now);
+            updateCountdown();
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multi-King of Annihilation — Boss Demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{--bg:#08121a;--fg:#eaf7ff;--muted:#8aa3b0}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+  #wrap{display:flex;gap:12px;padding:12px}
+  canvas{background:linear-gradient(180deg,#041018,#061426);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.7)}
+  #ui{width:320px}
+  .panel{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;margin-bottom:12px}
+  .bar{height:12px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#ffd06b,#ff7b7b)}
+  .muted{color:var(--muted);font-size:13px}
+  button{padding:8px 12px;border-radius:8px;background:#072235;border:1px solid rgba(255,255,255,0.03);color:var(--fg);cursor:pointer}
+  .kbd{display:inline-block;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);font-family:monospace}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="980" height="560"></canvas>
+  <div id="ui">
+    <div class="panel">
+      <h3>Multi-King of Annihilation</h3>
+      <div class="muted" id="roundInfo">Final Boss Demo</div>
+      <div style="height:8px"></div>
+      <div class="muted">Player Health</div>
+      <div class="bar" style="margin-top:6px"><i id="playerHP" style="width:100%"></i></div>
+      <div style="height:8px"></div>
+      <div class="muted">Boss Health</div>
+      <div class="bar" style="margin-top:6px"><i id="bossHP" style="width:100%"></i></div>
+      <div style="height:8px"></div>
+      <div class="muted">Notes</div>
+      <div class="muted">Reflecting orbs may appear; they do not reflect the boss's own bullets; super reverses controls for 5s and rains exploding bullets.</div>
+    </div>
+
+    <div class="panel">
+      <div class="muted">Controls</div>
+      <div style="height:8px"></div>
+      <div class="muted">Move: Arrow keys or WASD</div>
+      <div class="muted">Shoot: Space</div>
+      <div style="height:8px"></div>
+      <button id="restart">Restart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Multi-King of Annihilation — single-file boss demo
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+let keys = {};
+addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function dist(ax,ay,bx,by){ return Math.hypot(ax-bx,ay-by); }
+function angleBetween(a,b){ return Math.atan2(b.y-a.y, b.x-a.x); }
+
+let player, boss, bullets, lastTime, shootTimer;
+bullets = [];
+
+// Player with 200 HP per request
+function createPlayer(){
+  return {
+    x: W/2, y: H-100, r: 14,
+    speed: 280, hp: 300, maxHp:300,
+    weapon: 'gun', shootCooldown:0.14, _aLock:false,
+    controlsReversed: 0 // seconds remaining reversed
+  };
+}
+
+function spawnBullet(x,y,vx,vy, owner='enemy', opts={}){
+  bullets.push(Object.assign({x,y,vx,vy,r:opts.r||6,owner,dmg:opts.dmg||10,life:opts.life||5}, opts));
+}
+
+// Boss object (self-contained)
+const MultiKing = {
+  name: "Multi-King of Annihilation",
+  maxHp: 2600,
+  enter(self){
+    self.hp = self.maxHp;
+    self.x = W/2; self.y = 140;
+    self.timer = 0;
+    self.explodingTimer = 0.9;    // exploding bullets cadence
+    self.lineShotTimer = 1.4;     // line shots cadence
+    self.reflectorChanceTimer = 6; // check to spawn reflectors
+    self.reflectors = [];         // orbiting reflectors
+    self.reflectorSpawnChance = 0.42;
+    self.reflectorRadius = 84;
+    self.superReady = true;
+    self.superActive = false;
+    self.superTimer = 0;
+    self.superDuration = 5.0;
+    self._id = Math.floor(Math.random()*1e9);
+    self.warnFlash = 0;
+  },
+  update(self, dt){
+    self.timer += dt;
+    self.warnFlash = Math.max(0, self.warnFlash - dt);
+
+    // small exploding bullets
+    self.explodingTimer -= dt;
+    if (self.explodingTimer <= 0){
+      self.explodingTimer = 0.7 + Math.random()*0.6;
+      for (let i=0;i<3;i++){
+        const ang = Math.atan2(player.y - self.y, player.x - self.x) + rand(-0.36,0.36);
+        spawnBullet(self.x + Math.cos(ang)*28, self.y + Math.sin(ang)*28, Math.cos(ang)*220 + rand(-20,20), Math.sin(ang)*220 + rand(-20,20), 'enemy',
+          {r:8, dmg:18, life:3.6, exploding:true, shrapnel:6, _src:self._id});
+      }
+    }
+
+    // line-of-bullets aimed at player (tight line)
+    self.lineShotTimer -= dt;
+    if (self.lineShotTimer <= 0){
+      self.lineShotTimer = 1.6 + Math.random()*0.9;
+      const ang = Math.atan2(player.y - self.y, player.x - self.x);
+      const perp = Math.PI/2;
+      const lineCount = 6, spacing = 12;
+      for (let i = -Math.floor(lineCount/2); i <= Math.floor(lineCount/2); i++){
+        const offset = i * spacing;
+        const ox = self.x + Math.cos(ang + perp) * offset;
+        const oy = self.y + Math.sin(ang + perp) * offset;
+        spawnBullet(ox, oy, Math.cos(ang)*360, Math.sin(ang)*360, 'enemy', {r:5, dmg:12, life:2.8, _src:self._id});
+      }
+    }
+
+    // chance to spawn reflectors
+    self.reflectorChanceTimer -= dt;
+    if (self.reflectorChanceTimer <= 0){
+      self.reflectorChanceTimer = 4.8 + Math.random()*2.4;
+      if (Math.random() < self.reflectorSpawnChance){
+        const count = 3 + Math.floor(Math.random()*3); // 3..5 reflectors
+        for (let i=0;i<count;i++){
+          const a = i*(Math.PI*2/count) + rand(-0.12,0.12);
+          self.reflectors.push({ a, r: self.reflectorRadius + rand(-12,12), angSpeed: (Math.random()*2-1)*0.9, life: 10 + Math.random()*10 });
+        }
+      }
+    }
+
+    // update reflectors
+    for (let i=self.reflectors.length-1;i>=0;i--){
+      const r = self.reflectors[i];
+      r.a += r.angSpeed * dt;
+      r.life -= dt;
+      if (r.life <= 0) self.reflectors.splice(i,1);
+    }
+
+    // Super: trigger once under 40%
+    if (self.superReady && self.hp <= self.maxHp * 0.40){
+      self.superReady = false;
+      self.superActive = true;
+      self.superTimer = self.superDuration;
+      self.warnFlash = 1.0;
+      // reverse controls on player for duration
+      player.controlsReversed = (player.controlsReversed || 0) + self.superDuration;
+      // spawn initial heavy exploding volley
+      for (let i=0;i<18;i++){
+        const ang = Math.atan2(player.y - self.y, player.x - self.x) + rand(-0.9,0.9);
+        spawnBullet(self.x + Math.cos(ang)*28, self.y + Math.sin(ang)*28, Math.cos(ang)*140 + rand(-20,20), Math.sin(ang)*140 + rand(-20,20),
+                    'enemy', {r:9, dmg:3, life:6.8, exploding:true, shrapnel:8, _src:self._id});
+      }
+    }
+
+    // while super active, keep spawning exploding bullets densely
+    if (self.superActive){
+      self.superTimer -= dt;
+      if (Math.random() < 0.85 * dt * 60){
+        const ang = Math.atan2(player.y - self.y, player.x - self.x) + rand(-0.9,0.9);
+        spawnBullet(self.x + Math.cos(ang)*28, self.y + Math.sin(ang)*28, Math.cos(ang)*160 + rand(-10,10), Math.sin(ang)*160 + rand(-10,10),
+                    'enemy', {r:9, dmg:3, life:7.6, exploding:true, shrapnel:8, _src:self._id});
+      }
+      if (self.superTimer <= 0) self.superActive = false;
+    }
+  },
+  draw(self, ctx){
+    ctx.save(); ctx.translate(self.x, self.y);
+    ctx.fillStyle = '#d56b6b'; ctx.beginPath(); ctx.arc(0,0,52,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '12px system-ui'; ctx.fillText('Multi-King of Annihilation', -100, 82);
+    if (self.warnFlash > 0){
+      ctx.strokeStyle = `rgba(255,220,120,${0.9*self.warnFlash})`; ctx.lineWidth = 8*self.warnFlash;
+      ctx.beginPath(); ctx.arc(0,0,88 + 8*Math.sin(performance.now()/160),0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+
+    // draw reflectors
+    for (const r of self.reflectors){
+      const rx = self.x + Math.cos(r.a) * r.r;
+      const ry = self.y + Math.sin(r.a) * r.r;
+      ctx.save(); ctx.translate(rx, ry);
+      ctx.fillStyle = '#7fdcff'; ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  },
+  onHit(self, dmg){
+    self.hp -= dmg; if (self.hp < 0) self.hp = 0;
+  }
+};
+
+// global bullet update with reflectors, exploding bullets, and collision handling
+function updateBullets(dt){
+  for (let i = bullets.length - 1; i >= 0; i--){
+    const b = bullets[i];
+
+    // reflectors: allow reflectors to convert player bullets into enemy bullets
+    if (boss && boss.reflectors && b.owner === 'player'){
+      for (const R of boss.reflectors){
+        const rx = boss.x + Math.cos(R.a) * R.r;
+        const ry = boss.y + Math.sin(R.a) * R.r;
+        if (Math.hypot(b.x - rx, b.y - ry) < (b.r + 12)){
+          // do not reflect boss's own bullets (they might carry _src)
+          if (!b._src || b._src !== boss._id){
+            const ang = Math.atan2(b.y - ry, b.x - rx);
+            b.owner = 'enemy';
+            b.vx = Math.cos(ang) * 320;
+            b.vy = Math.sin(ang) * 320;
+            b.dmg = Math.max(6, b.dmg - 2);
+            b._src = boss._id;
+          }
+        }
+      }
+    }
+
+    // movement
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.life -= dt;
+
+    // remove if expired/offscreen (detonate exploding bullets safely)
+    if (b.life <= 0 || b.x < -120 || b.x > W+120 || b.y < -120 || b.y > H+120){
+      if (b.exploding && b.shrapnel && !b._detonated){
+        b._detonated = true;
+        const cap = Math.min(12, b.shrapnel);
+        for (let s=0;s<cap;s++){
+          const a = Math.random()*Math.PI*2;
+          const speed = 120 + Math.random()*140;
+          spawnBullet(b.x, b.y, Math.cos(a)*speed, Math.sin(a)*speed, 'enemy', {r:5, dmg:8, life:2.4});
+        }
+      }
+      bullets.splice(i,1);
+      continue;
+    }
+
+    if (b.owner === 'enemy'){
+      // collision with player
+      if (Math.hypot(b.x - player.x, b.y - player.y) < b.r + player.r){
+        player.hp -= b.dmg;
+        if (b.exploding && b.shrapnel && !b._detonated){
+          b._detonated = true;
+          const cap = Math.min(12, b.shrapnel);
+          for (let s=0;s<cap;s++){
+            const a = Math.random()*Math.PI*2;
+            const speed = 120 + Math.random()*140;
+            spawnBullet(b.x, b.y, Math.cos(a)*speed, Math.sin(a)*speed, 'enemy', {r:5, dmg:8, life:2.4});
+          }
+        }
+        bullets.splice(i,1);
+        updateUI();
+        continue;
+      }
+    } else { // player-owned
+      // check collisions with exploding enemy projectiles (player bullet can detonate them)
+      let detonatedIndex = -1;
+      for (let j = bullets.length - 1; j >= 0; j--){
+        const other = bullets[j];
+        if (other === b) continue;
+        if (other.owner === 'enemy' && other.exploding){
+          if (Math.hypot(other.x - b.x, other.y - b.y) < other.r + b.r){
+            if (!other._detonated){
+              other._detonated = true;
+              const cap = Math.min(12, other.shrapnel);
+              for (let s=0;s<cap;s++){
+                const a = Math.random()*Math.PI*2;
+                const speed = 120 + Math.random()*140;
+                spawnBullet(other.x, other.y, Math.cos(a)*speed, Math.sin(a)*speed, 'enemy', {r:5, dmg:8, life:2.4});
+              }
+            }
+            detonatedIndex = j;
+            break;
+          }
+        }
+      }
+      if (detonatedIndex !== -1){
+        // remove detonated enemy projectile and the player bullet that caused it
+        bullets.splice(detonatedIndex, 1);
+        const idx = bullets.indexOf(b);
+        if (idx !== -1) bullets.splice(idx,1);
+        continue;
+      }
+
+      // normal hit on boss core
+      if (Math.hypot(b.x - boss.x, b.y - boss.y) < b.r + 52){
+        boss.onHit(boss, b.dmg, b);
+        bullets.splice(i,1);
+        updateUI();
+        continue;
+      }
+    }
+  }
+}
+
+// player update with reversed-controls support
+function updatePlayer(dt){
+  // handle reversed control timer
+  if (player.controlsReversed && player.controlsReversed > 0){
+    player.controlsReversed -= dt;
+  }
+  let left = keys['arrowleft']||keys['a'], right = keys['arrowright']||keys['d'];
+  let up = keys['arrowup']||keys['w'], down = keys['arrowdown']||keys['s'];
+  let dx, dy;
+  if (player.controlsReversed && player.controlsReversed > 0){
+    // reversed mapping: pressing left moves right, up moves down
+    dx = (left ? 1:0) - (right ? 1:0);
+    dy = (up ? 1:0) - (down ? 1:0);
+  } else {
+    dx = (right ? 1:0) - (left ? 1:0);
+    dy = (down ? 1:0) - (up ? 1:0);
+  }
+  const len = Math.hypot(dx,dy) || 1;
+  player.x += (dx/len) * player.speed * dt;
+  player.y += (dy/len) * player.speed * dt;
+  player.x = clamp(player.x, 20, W-20);
+  player.y = clamp(player.y, 120, H-20);
+
+  // shooting
+  shootTimer -= dt;
+  const space = keys[' '] || keys['space'];
+  if (space && shootTimer <= 0){
+    shootTimer = player.shootCooldown;
+    spawnBullet(player.x, player.y-16, 0, -520, 'player', {r:4, dmg:14, life:1.0});
+    spawnBullet(player.x-8, player.y-12, -80, -420, 'player', {r:3, dmg:9, life:1.0});
+    spawnBullet(player.x+8, player.y-12, 80, -420, 'player', {r:3, dmg:9, life:1.0});
+  }
+}
+
+// rendering
+function render(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#04121a'; ctx.fillRect(0,0,W,H);
+
+  // header
+  ctx.fillStyle = '#dff7ff'; ctx.font = '18px system-ui';
+  ctx.fillText(`${MultiKing.name}`, 12, 26);
+
+  // draw reflectors under bullets for clarity
+  boss.draw(boss, ctx);
+
+  // bullets
+  for (const b of bullets){
+    ctx.beginPath();
+    if (b.owner === 'player'){ ctx.fillStyle = '#9be7ff'; ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); }
+    else {
+      if (b.exploding){ ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); }
+      else { ctx.fillStyle = '#ff9b71'; ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); }
+    }
+  }
+
+  // player
+  ctx.save(); ctx.translate(player.x, player.y);
+  ctx.fillStyle = '#7cf2a3'; ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#0f2030'; ctx.beginPath(); ctx.arc(0,-4,6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // HUD
+  ctx.fillStyle = '#fff'; ctx.font = '13px system-ui';
+  ctx.fillText(`HP ${Math.max(0,player.hp|0)} / ${player.maxHp}`, 12, H-12);
+  ctx.fillText(`Boss HP ${Math.max(0,boss.hp|0)} / ${boss.maxHp}`, W-260, 28);
+}
+
+// UI update
+function updateUI(){
+  document.getElementById('playerHP').style.width = `${Math.max(0, player.hp)/player.maxHp*100}%`;
+  document.getElementById('bossHP').style.width = `${Math.max(0, boss.hp)/boss.maxHp*100}%`;
+}
+
+// loop
+function loop(time){
+  const dt = Math.min((time - (lastTime||time))/1000, 0.033);
+  lastTime = time;
+  updatePlayer(dt);
+  boss.update(boss, dt);
+  updateBullets(dt);
+
+  if (boss.hp <= 0){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#04121a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#fff'; ctx.font = '28px system-ui'; ctx.fillText('YOU DEFEATED THE MULTI-KING', 60, H/2);
+    return;
+  }
+  if (player.hp <= 0){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#04121a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#fff'; ctx.font = '28px system-ui'; ctx.fillText('YOU DIED', W/2 - 60, H/2);
+    return;
+  }
+
+  render();
+  requestAnimationFrame(loop);
+}
+
+// restart handler
+document.getElementById('restart').addEventListener('click', ()=> startGame());
+
+function startGame(){
+  player = createPlayer();
+  bullets = [];
+  boss = Object.assign({}, MultiKing);
+  boss.enter(boss);
+  lastTime = performance.now();
+  shootTimer = 0;
+  updateUI();
+  requestAnimationFrame(loop);
+}
+
+startGame();
+</script>
+</body>
+</html>
+
+
