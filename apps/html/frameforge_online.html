@@ -234,6 +234,7 @@ function vibeThemeData(){return{frames:vibeFrames.map(frame=>({...frame})),repea
 function applyVibeData(data){const theme=normalizeVibe(data);vibeFrames=theme.frames;vibeMotionStrokes=theme.motion.strokes;vibeIndex=0;vibeElapsed=0;$('vibeRepeat').checked=theme.repeat;$('vibeMotionDuration').value=String(theme.motion.duration);renderVibeFrames();drawVibeMotion();updateVibeTheme();scheduleSave()}
 const originalVibePayload=payload;payload=function(){return{...originalVibePayload(),vibeTheme:vibeThemeData()}};
 const originalVibeLoadPayload=loadPayload;loadPayload=async function(data,id=uid()){const result=await originalVibeLoadPayload(data,id);applyVibeData(data?.vibeTheme||{});return result};
+window.FrameForgeOnline=Object.freeze({loadProject:data=>loadPayload(data)});
 function pointOnVibeCanvas(event){const rect=vibeMotionCanvas.getBoundingClientRect();return[Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)),Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height))]}
 vibeMotionCanvas.addEventListener('pointerdown',event=>{if(!rectAvailable(vibeMotionCanvas))return;event.preventDefault();vibeMotionCanvas.setPointerCapture(event.pointerId);vibeCurrentStroke={width:.014,points:[pointOnVibeCanvas(event)]};vibeMotionStrokes.push(vibeCurrentStroke);drawVibeMotion()});
 vibeMotionCanvas.addEventListener('pointermove',event=>{if(!vibeCurrentStroke)return;const point=pointOnVibeCanvas(event),last=vibeCurrentStroke.points[vibeCurrentStroke.points.length-1];if(Math.hypot(point[0]-last[0],point[1]-last[1])>.003)vibeCurrentStroke.points.push(point);drawVibeMotion()});
@@ -414,7 +415,7 @@ restore();
  }
  async function openProject(id,name,confirmBeforeOpen=true,openUrl=''){
   if(confirmBeforeOpen&&!confirm(`Open “${name}”? Your current unsaved canvas will be replaced.`))return false;
-  try{tell(`Opening “${name}”...`);const url=openUrl.startsWith('/api/projects/')?openUrl:'/api/projects/'+encodeURIComponent(id),p=await api(url);if(typeof loadPayload!=='function')throw Error('Project loader is not available');await loadPayload(p);tell(`Opened “${name}”. A local browser copy was also created.`);panel.classList.remove('open');return true}
+  try{tell(`Opening “${name}”...`);const url=openUrl.startsWith('/api/projects/')?openUrl:'/api/projects/'+encodeURIComponent(id),p=await api(url),loader=window.FrameForgeOnline?.loadProject;if(typeof loader!=='function')throw Error('FrameForge project loader is not available');await loader(p);tell(`Opened “${name}”. A local browser copy was also created.`);panel.classList.remove('open');return true}
   catch(e){tell(`Could not open project: ${e.message}`,true);return false}
  }
  $o('ffOnlineButton').onclick=()=>{panel.classList.add('open');refresh()};$o('ffOnlineClose').onclick=()=>panel.classList.remove('open');$o('ffOnlineRefresh').onclick=refresh;$o('ffOnlineUpload').onclick=()=>$o('ffOnlineFile').click();$o('ffOnlineFile').onchange=event=>{const file=event.target.files[0];if(file)upload(file);event.target.value=''};
