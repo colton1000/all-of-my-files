@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Green Squish Toy</title>
+<style>
+  :root{color-scheme:dark;--lime:#77ff49;--panel:rgba(8,18,25,.82)}
+  *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071019;font-family:Inter,system-ui,Segoe UI,sans-serif;touch-action:none}
+  canvas{display:block;width:100%;height:100%;cursor:grab} canvas.grabbing{cursor:grabbing}
+  .hud{position:fixed;left:18px;top:18px;z-index:2;max-width:350px;padding:16px 17px;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:var(--panel);backdrop-filter:blur(16px);box-shadow:0 18px 60px #0008;user-select:none}
+  h1{margin:0 0 5px;font-size:20px;letter-spacing:.2px;color:#eaffea}.sub{font-size:12px;line-height:1.45;color:#a9b7c0}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}button{border:1px solid #ffffff18;border-radius:12px;background:#152631;color:#d9f6e0;padding:9px 12px;font-weight:700;cursor:pointer}button:hover{background:#203946}button.active{background:#46c623;color:#071007;border-color:#8cff68}
+  .meter{height:7px;margin-top:12px;border-radius:99px;background:#ffffff12;overflow:hidden}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#62ff45,#ffe45e,#ff6b79);border-radius:99px;transition:width .08s}
+  .hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:9px 14px;border-radius:99px;background:#08141dcc;color:#cbe0e8;font-size:12px;border:1px solid #ffffff15;user-select:none;white-space:nowrap}
+  @media(max-width:600px){.hud{left:10px;top:10px;padding:12px;max-width:calc(100% - 20px)}.hint{bottom:10px;font-size:11px}.sub{display:none}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><h1>Green Squish Toy</h1><div class="sub">Grab the toy to move it. Pull from its edge to stretch it. Hold the right mouse button and drag to squeeze. Release it and watch it wobble back.</div><div class="controls"><button id="grab" class="active">Grab / Stretch</button><button id="squish">Squish Mode</button><button id="reset">Reset</button></div><div class="meter"><i id="meter"></i></div></div>
+<div class="hint">Drag to move & stretch • Right-drag to squish • Mouse wheel changes softness</div>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d',{alpha:false});
+const meter=document.getElementById('meter'); let W=0,H=0,DPR=1;
+const toy={x:0,y:0,vx:0,vy:0,base:120,sx:1,sy:1,svx:0,svy:0,rot:0,rv:0,soft:.78};
+let pointer={x:0,y:0,px:0,py:0,down:false,right:false,grabDX:0,grabDY:0,localX:0,localY:0};
+let mode='grab',last=performance.now(),stress=0;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);if(!toy.x){toy.x=W*.55;toy.y=H*.48;toy.base=Math.max(75,Math.min(135,Math.min(W,H)*.18));}}
+addEventListener('resize',resize);resize();
+function inside(x,y){let dx=x-toy.x,dy=y-toy.y,c=Math.cos(-toy.rot),s=Math.sin(-toy.rot);let lx=dx*c-dy*s,ly=dx*s+dy*c;return (lx*lx)/(toy.base*toy.base*toy.sx*toy.sx)+(ly*ly)/(toy.base*toy.base*toy.sy*toy.sy)<1.15}
+function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left),y:(e.clientY-r.top)}}
+canvas.oncontextmenu=e=>e.preventDefault();
+canvas.addEventListener('pointerdown',e=>{let p=point(e); pointer.x=pointer.px=p.x;pointer.y=pointer.py=p.y;if(!inside(p.x,p.y))return;pointer.down=true;pointer.right=e.button===2||mode==='squish';pointer.grabDX=toy.x-p.x;pointer.grabDY=toy.y-p.y;pointer.localX=(p.x-toy.x)/(toy.base*toy.sx);pointer.localY=(p.y-toy.y)/(toy.base*toy.sy);canvas.setPointerCapture(e.pointerId);canvas.classList.add('grabbing')});
+canvas.addEventListener('pointermove',e=>{let p=point(e);pointer.px=pointer.x;pointer.py=pointer.y;pointer.x=p.x;pointer.y=p.y;if(!pointer.down)return;let dx=p.x-pointer.px,dy=p.y-pointer.py,speed=Math.hypot(dx,dy);if(pointer.right){let radial=((p.x-toy.x)*pointer.localX+(p.y-toy.y)*pointer.localY);let q=Math.max(-.55,Math.min(.55,radial/toy.base));toy.sx-=Math.abs(pointer.localY)*q*.08+Math.abs(dx)*.0015;toy.sy-=Math.abs(pointer.localX)*q*.08+Math.abs(dy)*.0015;toy.sx=Math.max(.42,Math.min(1.65,toy.sx));toy.sy=Math.max(.42,Math.min(1.65,toy.sy));toy.svx-=dx*.001;toy.svy-=dy*.001;stress=Math.min(1,stress+speed*.008)}else{let tx=p.x+pointer.grabDX,ty=p.y+pointer.grabDY;toy.vx+=(tx-toy.x)*.32;toy.vy+=(ty-toy.y)*.32;let dist=Math.hypot(p.x-toy.x,p.y-toy.y),ang=Math.atan2(p.y-toy.y,p.x-toy.x);let pull=Math.max(0,dist/toy.base-0.5);let targetLong=1+Math.min(1.15,pull*.55),targetShort=1/Math.sqrt(targetLong);let horizontal=Math.abs(Math.cos(ang));toy.sx+=(targetLong*horizontal+targetShort*(1-horizontal)-toy.sx)*.28;toy.sy+=(targetShort*horizontal+targetLong*(1-horizontal)-toy.sy)*.28;toy.rot+=(ang-toy.rot)*.08;stress=Math.min(1,pull*.8+speed*.02)}});
+function release(e){if(!pointer.down)return;pointer.down=false;canvas.classList.remove('grabbing');toy.vx+=(pointer.x-pointer.px)*1.4;toy.vy+=(pointer.y-pointer.py)*1.4;toy.svx+=(1-toy.sx)*.12;toy.svy+=(1-toy.sy)*.12;try{canvas.releasePointerCapture(e.pointerId)}catch(_){}}
+canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);
+canvas.addEventListener('wheel',e=>{e.preventDefault();toy.soft=Math.max(.25,Math.min(.96,toy.soft-e.deltaY*.0005));document.querySelector('.hint').textContent='Softness: '+Math.round(toy.soft*100)+'% • Drag to test it';},{passive:false});
+document.getElementById('grab').onclick=()=>setMode('grab');document.getElementById('squish').onclick=()=>setMode('squish');document.getElementById('reset').onclick=()=>{toy.x=W*.55;toy.y=H*.48;toy.vx=toy.vy=toy.svx=toy.svy=toy.rv=0;toy.sx=toy.sy=1;toy.rot=0;stress=0};
+function setMode(m){mode=m;document.getElementById('grab').classList.toggle('active',m==='grab');document.getElementById('squish').classList.toggle('active',m==='squish')}
+function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+function update(dt){dt=Math.min(dt,.033)*60;let spring=.055+(1-toy.soft)*.12,damp=.80+toy.soft*.13;if(!pointer.down){toy.svx+=(1-toy.sx)*spring*dt;toy.svy+=(1-toy.sy)*spring*dt;toy.svx*=Math.pow(damp,dt);toy.svy*=Math.pow(damp,dt);toy.sx+=toy.svx*dt;toy.sy+=toy.svy*dt;toy.rv+=(-toy.rot)*.015*dt;toy.rv*=Math.pow(.92,dt);toy.rot+=toy.rv*dt;stress*=Math.pow(.94,dt)}toy.vx*=Math.pow(pointer.down?.58:.91,dt);toy.vy*=Math.pow(pointer.down?.58:.91,dt);toy.x+=toy.vx*dt;toy.y+=toy.vy*dt;let r=toy.base*Math.max(toy.sx,toy.sy)*.62, floor=H*.83;if(toy.x<r){toy.x=r;toy.vx=Math.abs(toy.vx)*.55}if(toy.x>W-r){toy.x=W-r;toy.vx=-Math.abs(toy.vx)*.55}if(toy.y<r){toy.y=r;toy.vy=Math.abs(toy.vy)*.55}if(toy.y>floor-r*.42){toy.y=floor-r*.42;toy.vy=-Math.abs(toy.vy)*.45;toy.sy*=.985;toy.sx*=1.012}toy.sx=Math.max(.38,Math.min(2.15,toy.sx));toy.sy=Math.max(.38,Math.min(2.15,toy.sy));meter.style.width=Math.min(100,stress*100)+'%'}
+function drawBackground(){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#102b39');g.addColorStop(.58,'#0b1823');g.addColorStop(1,'#05090e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);let glow=ctx.createRadialGradient(W*.53,H*.35,0,W*.53,H*.35,Math.max(W,H)*.6);glow.addColorStop(0,'rgba(57,137,153,.17)');glow.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);let floor=H*.83;ctx.strokeStyle='rgba(128,206,216,.10)';ctx.lineWidth=1;for(let i=-10;i<=10;i++){ctx.beginPath();ctx.moveTo(W*.5+i*18,floor);ctx.lineTo(W*.5+i*145,H);ctx.stroke()}for(let j=0;j<7;j++){let t=j/7,y=floor+(H-floor)*(t*t);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(0,floor,W,H-floor)}
+function drawToy(){let floor=H*.83,shadowY=Math.min(floor,toy.y+toy.base*toy.sy*.78),height=Math.max(0,floor-shadowY);ctx.save();ctx.translate(toy.x,shadowY+10);ctx.scale(1,0.28);let sg=ctx.createRadialGradient(0,0,5,0,0,toy.base*1.25);sg.addColorStop(0,'rgba(0,0,0,.5)');sg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,toy.base*toy.sx*(1-height/H*.4),0,Math.PI*2);ctx.fill();ctx.restore();ctx.save();ctx.translate(toy.x,toy.y);ctx.rotate(toy.rot);ctx.scale(toy.sx,toy.sy);let r=toy.base;let body=ctx.createRadialGradient(-r*.35,-r*.4,r*.06,0,0,r*1.15);body.addColorStop(0,'#baff85');body.addColorStop(.18,'#68ee45');body.addColorStop(.62,'#24a92f');body.addColorStop(1,'#0b581f');ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='screen';let shine=ctx.createRadialGradient(-r*.38,-r*.45,0,-r*.35,-r*.42,r*.5);shine.addColorStop(0,'rgba(255,255,255,.74)');shine.addColorStop(.32,'rgba(210,255,190,.18)');shine.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=shine;ctx.beginPath();ctx.arc(-r*.25,-r*.3,r*.55,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='source-over';ctx.strokeStyle='rgba(5,45,15,.5)';ctx.lineWidth=3/toy.sx;ctx.beginPath();ctx.arc(0,0,r-1.5,0,Math.PI*2);ctx.stroke();ctx.restore()}
+function frame(now){let dt=(now-last)/1000;last=now;update(dt);drawBackground();drawToy();requestAnimationFrame(frame)}requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
