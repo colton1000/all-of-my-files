@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "FrameForge: On the GO!",
+  "version": "2.2.0",
+  "description": "A compact 2D drawing and frame animation studio for Firefox.",
+  "action": {
+    "default_title": "FrameForge: On the GO!",
+    "default_popup": "index.html",
+    "default_icon": "icon.svg"
+  },
+  "icons": {
+    "48": "icon.svg",
+    "96": "icon.svg"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "frameforge-on-the-go@local",
+      "strict_min_version": "109.0"
+    }
+  }
+}
