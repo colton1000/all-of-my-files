@@ -1,6 +1,13 @@
 import random
-import time
 import os
+import shutil
+import time
+
+
+def clear_screen() -> str:
+    """Return the terminal escape sequence needed to clear the current screen."""
+    return "\033[2J\033[H"
+
 
 # ============================
 #  ADVANCED STATIC CATEGORIES
@@ -111,7 +118,7 @@ def animate_fire():
     height = 12
 
     for _ in range(40):
-        os.system("cls" if os.name == "nt" else "clear")
+        print(clear_screen(), end="")
         print("[Animation: fire]\n")
 
         for y in range(height):
@@ -134,7 +141,7 @@ def animate_rain():
     drops = ["|", "'", ".", "`"]
 
     for _ in range(40):
-        os.system("cls" if os.name == "nt" else "clear")
+        print(clear_screen(), end="")
         print("[Animation: rain]\n")
 
         for y in range(height):
@@ -153,7 +160,7 @@ def animate_bounce_text():
     pos = 0
 
     for _ in range(60):
-        os.system("cls" if os.name == "nt" else "clear")
+        print(clear_screen(), end="")
         print("[Animation: bouncing text]\n")
 
         print(" " * pos + text)

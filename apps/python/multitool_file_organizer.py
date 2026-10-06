@@ -6,8 +6,6 @@ No third-party packages are required.
 """
 from __future__ import annotations
 
-import ctypes
-import ctypes.wintypes
 import http.server
 import json
 import os
@@ -21,6 +19,13 @@ import threading
 import time
 import tkinter as tk
 import webbrowser
+
+if sys.platform.startswith("win"):
+    import ctypes
+    import ctypes.wintypes
+else:
+    ctypes = None
+    ctypes_wintypes = None
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -421,7 +426,7 @@ class UtilityHub(tk.Tk):
         except ValueError:
             messagebox.showerror(APP_TITLE, "Use an interval of at least 0.01, a nonnegative click count, and a nonnegative delay.")
             return
-        if not sys.platform.startswith("win"):
+        if not sys.platform.startswith("win") or ctypes is None:
             messagebox.showerror(APP_TITLE, "The built-in no-install auto clicker currently supports Windows only.")
             return
 
@@ -439,6 +444,7 @@ class UtilityHub(tk.Tk):
             time.sleep(0.05)
 
         clicked = 0
+        assert ctypes is not None
         while not self.click_stop.is_set() and (count == 0 or clicked < count):
             point = ctypes.wintypes.POINT()
             ctypes.windll.user32.GetCursorPos(ctypes.byref(point))

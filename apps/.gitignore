@@ -1,0 +1,17 @@
+# Local editor and temp files
+.vscode/
+.idea/
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated caches
+.cache/
+node_modules/
+dist/
+build/

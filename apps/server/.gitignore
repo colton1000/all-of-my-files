@@ -1,0 +1,6 @@
+# Server-side local state
+.env
+.env.*
+*.log
+*.sqlite3
+__pycache__/

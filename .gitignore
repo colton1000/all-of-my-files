@@ -218,3 +218,26 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-specific local artifacts
+*.tmp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local browser/editor caches
+.cache/
+.vscode/
+.idea/
+node_modules/
+
+# Personal project folders and generated output
+local-output/
+out/
+logs/
+*.log

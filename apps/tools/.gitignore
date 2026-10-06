@@ -1,0 +1,7 @@
+# Tooling and helper script artifacts
+*.log
+*.tmp
+*.bak
+*.swp
+.swp
+.DS_Store

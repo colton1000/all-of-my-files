@@ -11,12 +11,14 @@ MAX_UPLOAD = 25 * 1024 * 1024
 HTML_HINT = "frameforge_online"
 
 
-def find_html():
-    files = list(ROOT.glob("*.html"))
+def find_html(directory: Path | None = None) -> Path:
+    """Return the preferred FrameForge HTML file from a directory."""
+    root = (directory or ROOT).resolve()
+    files = sorted(root.glob("*.html"), key=lambda p: p.name.lower())
     if not files:
-        raise SystemExit("No HTML file found beside frameforge_server.py")
+        raise SystemExit(f"No HTML file found in {root}")
     preferred = [p for p in files if HTML_HINT in p.stem.lower()]
-    return sorted(preferred or files, key=lambda p: p.stat().st_mtime, reverse=True)[0]
+    return preferred[0] if preferred else files[0]
 
 
 def safe_title(value):
