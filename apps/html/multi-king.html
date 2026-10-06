@@ -5,17 +5,24 @@
 <title>Multi-King of Annihilation — Boss Demo</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  :root{--bg:#08121a;--fg:#eaf7ff;--muted:#8aa3b0}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-  #wrap{display:flex;gap:12px;padding:12px}
-  canvas{background:linear-gradient(180deg,#041018,#061426);border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.7)}
-  #ui{width:320px}
-  .panel{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;margin-bottom:12px}
+  :root{--bg:#07111b;--fg:#eaf7ff;--muted:#91a8b7;--line:#294152;--panel:#0e1c29;--accent:#76e5bc}
+  *{box-sizing:border-box}
+  html,body{min-height:100%;margin:0;background:radial-gradient(circle at 25% 0,#132c3b,var(--bg) 58%);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+  #wrap{display:flex;align-items:flex-start;justify-content:center;gap:16px;padding:16px;min-height:100dvh}
+  canvas{width:min(100%,980px);height:auto;flex:0 1 980px;background:linear-gradient(180deg,#041018,#061426);border:1px solid #284255;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.55)}
+  #ui{width:320px;flex:0 0 320px}
+  .panel{background:linear-gradient(150deg,#142635,#0c1823);border:1px solid var(--line);padding:16px;border-radius:12px;margin-bottom:12px;box-shadow:0 12px 28px #0003}
+  .panel h3{margin:0 0 6px;font-size:18px}
   .bar{height:12px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden}
-  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#ffd06b,#ff7b7b)}
-  .muted{color:var(--muted);font-size:13px}
-  button{padding:8px 12px;border-radius:8px;background:#072235;border:1px solid rgba(255,255,255,0.03);color:var(--fg);cursor:pointer}
-  .kbd{display:inline-block;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);font-family:monospace}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#76e5bc,#ffd06b,#ff7b7b);transition:width .15s}
+  .muted{color:var(--muted);font-size:13px;line-height:1.5}
+  button,select{font:inherit;padding:9px 12px;border-radius:8px;background:#102b3c;border:1px solid #315166;color:var(--fg)}
+  button{cursor:pointer;font-weight:650}button:hover{background:#194158;border-color:#54809a}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  select{width:100%;margin-top:6px}
+  .kbd{display:inline-block;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);font-family:monospace}
+  @media(max-width:1050px){#wrap{flex-direction:column;align-items:center}canvas{width:min(100%,980px);flex-basis:auto}#ui{width:min(100%,980px);flex-basis:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.panel{margin:0}}
+  @media(max-width:620px){#wrap{padding:8px;gap:10px}#ui{grid-template-columns:1fr}.panel{padding:13px}}
 </style>
 </head>
 <body>
@@ -24,7 +31,7 @@
   <div id="ui">
     <div class="panel">
       <h3>Multi-King of Annihilation</h3>
-      <div class="muted" id="roundInfo">Final Boss Demo</div>
+      <div class="muted" id="roundInfo">Final Boss Demo · Normal</div>
       <div style="height:8px"></div>
       <div class="muted">Player Health</div>
       <div class="bar" style="margin-top:6px"><i id="playerHP" style="width:100%"></i></div>
@@ -40,9 +47,15 @@
       <div class="muted">Controls</div>
       <div style="height:8px"></div>
       <div class="muted">Move: Arrow keys or WASD</div>
-      <div class="muted">Shoot: Space</div>
-      <div style="height:8px"></div>
-      <button id="restart">Restart</button>
+      <div class="muted">Shoot: Space · Pause: P</div>
+      <label class="muted" for="difficulty" style="display:block;margin-top:10px">Difficulty</label>
+      <select id="difficulty" aria-label="Game difficulty">
+        <option value="easy">Easy · more health</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Hard · tougher boss</option>
+      </select>
+      <div class="muted" style="margin-top:5px">Restart the fight to apply difficulty changes.</div>
+      <div class="controls"><button id="pause" type="button">Pause</button><button id="restart" type="button">Restart</button></div>
     </div>
   </div>
 </div>
@@ -54,7 +67,11 @@ const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
 let keys = {};
-addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  keys[key] = true;
+  if (key === 'p' && !e.repeat && !gameOver) togglePause();
+});
 addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
 function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
@@ -62,10 +79,11 @@ function rand(min,max){ return Math.random()*(max-min)+min; }
 function dist(ax,ay,bx,by){ return Math.hypot(ax-bx,ay-by); }
 function angleBetween(a,b){ return Math.atan2(b.y-a.y, b.x-a.x); }
 
-let player, boss, bullets, lastTime, shootTimer;
+let player, boss, bullets, lastTime, shootTimer, animationFrame = 0;
+let paused = false, gameOver = false;
 bullets = [];
 
-// Player with 200 HP per request
+// Difficulty updates the player's starting health at the beginning of each fight.
 function createPlayer(){
   return {
     x: W/2, y: H-100, r: 14,
@@ -377,50 +395,90 @@ function render(){
 function updateUI(){
   document.getElementById('playerHP').style.width = `${Math.max(0, player.hp)/player.maxHp*100}%`;
   document.getElementById('bossHP').style.width = `${Math.max(0, boss.hp)/boss.maxHp*100}%`;
+  document.getElementById('roundInfo').textContent = `Final Boss Demo · ${document.getElementById('difficulty').selectedOptions[0].text.split(' · ')[0]}`;
 }
 
 // loop
 function loop(time){
+  if (gameOver) return;
   const dt = Math.min((time - (lastTime||time))/1000, 0.033);
   lastTime = time;
+  if (paused){
+    render();
+    drawOverlay('PAUSED', 'Press P or Resume to continue');
+    animationFrame = requestAnimationFrame(loop);
+    return;
+  }
   updatePlayer(dt);
   boss.update(boss, dt);
   updateBullets(dt);
 
   if (boss.hp <= 0){
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = '#04121a'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#fff'; ctx.font = '28px system-ui'; ctx.fillText('YOU DEFEATED THE MULTI-KING', 60, H/2);
+    gameOver = true;
+    render();
+    drawOverlay('VICTORY', 'The Multi-King has been defeated');
     return;
   }
   if (player.hp <= 0){
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = '#04121a'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#fff'; ctx.font = '28px system-ui'; ctx.fillText('YOU DIED', W/2 - 60, H/2);
+    gameOver = true;
+    render();
+    drawOverlay('DEFEAT', 'Restart to try again');
     return;
   }
 
   render();
-  requestAnimationFrame(loop);
+  animationFrame = requestAnimationFrame(loop);
+}
+
+function drawOverlay(title, subtitle){
+  ctx.save();
+  ctx.fillStyle = 'rgba(2,8,14,.72)';
+  ctx.fillRect(0,0,W,H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#eaf7ff';
+  ctx.font = '700 34px system-ui';
+  ctx.fillText(title, W/2, H/2 - 10);
+  ctx.fillStyle = '#a8c5d4';
+  ctx.font = '16px system-ui';
+  ctx.fillText(subtitle, W/2, H/2 + 24);
+  ctx.restore();
+}
+
+function togglePause(){
+  if (gameOver) return;
+  paused = !paused;
+  document.getElementById('pause').textContent = paused ? 'Resume' : 'Pause';
+  lastTime = performance.now();
 }
 
 // restart handler
 document.getElementById('restart').addEventListener('click', ()=> startGame());
+document.getElementById('pause').addEventListener('click', togglePause);
 
 function startGame(){
+  cancelAnimationFrame(animationFrame);
+  paused = false;
+  gameOver = false;
+  document.getElementById('pause').textContent = 'Pause';
   player = createPlayer();
+  const difficulty = document.getElementById('difficulty').value;
+  if (difficulty === 'easy') {
+    player.hp = player.maxHp = 360;
+  } else if (difficulty === 'hard') {
+    player.hp = player.maxHp = 250;
+  }
   bullets = [];
   boss = Object.assign({}, MultiKing);
+  if (difficulty === 'easy') boss.maxHp = 1800;
+  if (difficulty === 'hard') boss.maxHp = 3400;
   boss.enter(boss);
   lastTime = performance.now();
   shootTimer = 0;
   updateUI();
-  requestAnimationFrame(loop);
+  animationFrame = requestAnimationFrame(loop);
 }
 
 startGame();
 </script>
 </body>
 </html>
-
-

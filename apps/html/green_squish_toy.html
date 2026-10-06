@@ -18,7 +18,7 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="hud"><h1>Green Squish Toy</h1><div class="sub">Grab the toy to move it. Pull from its edge to stretch it. Hold the right mouse button and drag to squeeze. Release it and watch it wobble back.</div><div class="controls"><button id="grab" class="active">Grab / Stretch</button><button id="squish">Squish Mode</button><button id="reset">Reset</button></div><div class="meter"><i id="meter"></i></div></div>
+<div class="hud"><h1>Green Squish Toy</h1><div class="sub">Grab the toy to move it. Pull from its edge to stretch it. Hold the right mouse button and drag to squeeze. Release it and watch it wobble back.</div><div class="controls"><button id="grab" class="active">Grab / Stretch</button><button id="squish">Squish Mode</button><button id="colorMode" aria-label="Change toy color">Color: Lime</button><button id="reset">Reset</button></div><div class="meter"><i id="meter"></i></div></div>
 <div class="hint">Drag to move & stretch • Right-drag to squish • Mouse wheel changes softness</div>
 <script>
 (()=>{
@@ -26,6 +26,8 @@
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d',{alpha:false});
 const meter=document.getElementById('meter'); let W=0,H=0,DPR=1;
 const toy={x:0,y:0,vx:0,vy:0,base:120,sx:1,sy:1,svx:0,svy:0,rot:0,rv:0,soft:.78};
+const colorModes=[['Lime',0],['Ocean',90],['Berry',190],['Sunset',280]];
+let colorIndex=0;
 let pointer={x:0,y:0,px:0,py:0,down:false,right:false,grabDX:0,grabDY:0,localX:0,localY:0};
 let mode='grab',last=performance.now(),stress=0;
 function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);if(!toy.x){toy.x=W*.55;toy.y=H*.48;toy.base=Math.max(75,Math.min(135,Math.min(W,H)*.18));}}
@@ -39,12 +41,13 @@ function release(e){if(!pointer.down)return;pointer.down=false;canvas.classList.
 canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercancel',release);
 canvas.addEventListener('wheel',e=>{e.preventDefault();toy.soft=Math.max(.25,Math.min(.96,toy.soft-e.deltaY*.0005));document.querySelector('.hint').textContent='Softness: '+Math.round(toy.soft*100)+'% • Drag to test it';},{passive:false});
 document.getElementById('grab').onclick=()=>setMode('grab');document.getElementById('squish').onclick=()=>setMode('squish');document.getElementById('reset').onclick=()=>{toy.x=W*.55;toy.y=H*.48;toy.vx=toy.vy=toy.svx=toy.svy=toy.rv=0;toy.sx=toy.sy=1;toy.rot=0;stress=0};
+document.getElementById('colorMode').onclick=()=>{colorIndex=(colorIndex+1)%colorModes.length;document.getElementById('colorMode').textContent='Color: '+colorModes[colorIndex][0]};
 function setMode(m){mode=m;document.getElementById('grab').classList.toggle('active',m==='grab');document.getElementById('squish').classList.toggle('active',m==='squish')}
 function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 function update(dt){dt=Math.min(dt,.033)*60;let spring=.055+(1-toy.soft)*.12,damp=.80+toy.soft*.13;if(!pointer.down){toy.svx+=(1-toy.sx)*spring*dt;toy.svy+=(1-toy.sy)*spring*dt;toy.svx*=Math.pow(damp,dt);toy.svy*=Math.pow(damp,dt);toy.sx+=toy.svx*dt;toy.sy+=toy.svy*dt;toy.rv+=(-toy.rot)*.015*dt;toy.rv*=Math.pow(.92,dt);toy.rot+=toy.rv*dt;stress*=Math.pow(.94,dt)}toy.vx*=Math.pow(pointer.down?.58:.91,dt);toy.vy*=Math.pow(pointer.down?.58:.91,dt);toy.x+=toy.vx*dt;toy.y+=toy.vy*dt;let r=toy.base*Math.max(toy.sx,toy.sy)*.62, floor=H*.83;if(toy.x<r){toy.x=r;toy.vx=Math.abs(toy.vx)*.55}if(toy.x>W-r){toy.x=W-r;toy.vx=-Math.abs(toy.vx)*.55}if(toy.y<r){toy.y=r;toy.vy=Math.abs(toy.vy)*.55}if(toy.y>floor-r*.42){toy.y=floor-r*.42;toy.vy=-Math.abs(toy.vy)*.45;toy.sy*=.985;toy.sx*=1.012}toy.sx=Math.max(.38,Math.min(2.15,toy.sx));toy.sy=Math.max(.38,Math.min(2.15,toy.sy));meter.style.width=Math.min(100,stress*100)+'%'}
 function drawBackground(){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#102b39');g.addColorStop(.58,'#0b1823');g.addColorStop(1,'#05090e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);let glow=ctx.createRadialGradient(W*.53,H*.35,0,W*.53,H*.35,Math.max(W,H)*.6);glow.addColorStop(0,'rgba(57,137,153,.17)');glow.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);let floor=H*.83;ctx.strokeStyle='rgba(128,206,216,.10)';ctx.lineWidth=1;for(let i=-10;i<=10;i++){ctx.beginPath();ctx.moveTo(W*.5+i*18,floor);ctx.lineTo(W*.5+i*145,H);ctx.stroke()}for(let j=0;j<7;j++){let t=j/7,y=floor+(H-floor)*(t*t);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(0,floor,W,H-floor)}
 function drawToy(){let floor=H*.83,shadowY=Math.min(floor,toy.y+toy.base*toy.sy*.78),height=Math.max(0,floor-shadowY);ctx.save();ctx.translate(toy.x,shadowY+10);ctx.scale(1,0.28);let sg=ctx.createRadialGradient(0,0,5,0,0,toy.base*1.25);sg.addColorStop(0,'rgba(0,0,0,.5)');sg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,toy.base*toy.sx*(1-height/H*.4),0,Math.PI*2);ctx.fill();ctx.restore();ctx.save();ctx.translate(toy.x,toy.y);ctx.rotate(toy.rot);ctx.scale(toy.sx,toy.sy);let r=toy.base;let body=ctx.createRadialGradient(-r*.35,-r*.4,r*.06,0,0,r*1.15);body.addColorStop(0,'#baff85');body.addColorStop(.18,'#68ee45');body.addColorStop(.62,'#24a92f');body.addColorStop(1,'#0b581f');ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='screen';let shine=ctx.createRadialGradient(-r*.38,-r*.45,0,-r*.35,-r*.42,r*.5);shine.addColorStop(0,'rgba(255,255,255,.74)');shine.addColorStop(.32,'rgba(210,255,190,.18)');shine.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=shine;ctx.beginPath();ctx.arc(-r*.25,-r*.3,r*.55,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation='source-over';ctx.strokeStyle='rgba(5,45,15,.5)';ctx.lineWidth=3/toy.sx;ctx.beginPath();ctx.arc(0,0,r-1.5,0,Math.PI*2);ctx.stroke();ctx.restore()}
-function frame(now){let dt=(now-last)/1000;last=now;update(dt);drawBackground();drawToy();requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(now){let dt=(now-last)/1000;last=now;update(dt);drawBackground();ctx.save();ctx.filter='hue-rotate('+colorModes[colorIndex][1]+'deg)';drawToy();ctx.restore();requestAnimationFrame(frame)}requestAnimationFrame(frame);
 })();
 </script>
 </body></html>

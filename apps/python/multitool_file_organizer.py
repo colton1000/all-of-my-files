@@ -102,8 +102,8 @@ class UtilityHub(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title(APP_TITLE)
-        self.geometry("760x570")
-        self.minsize(680, 500)
+        self.geometry("820x620")
+        self.minsize(700, 520)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.events: queue.Queue[tuple[str, object]] = queue.Queue()
@@ -123,6 +123,8 @@ class UtilityHub(tk.Tk):
             style.theme_use("vista" if sys.platform.startswith("win") else "clam")
         except tk.TclError:
             pass
+        style.configure("TNotebook.Tab", padding=(14, 8), font=("Segoe UI", 9, "bold"))
+        style.configure("TButton", padding=(9, 6))
 
         header = ttk.Frame(self, padding=(18, 16, 18, 8))
         header.pack(fill="x")
@@ -209,6 +211,7 @@ class UtilityHub(tk.Tk):
         self.server_stop_button = ttk.Button(controls, text="Stop Server", command=self.stop_server, state="disabled")
         self.server_stop_button.pack(side="left", padx=8)
         ttk.Button(controls, text="Open Again", command=self.open_server_again).pack(side="left")
+        ttk.Button(controls, text="Copy URL", command=self.copy_server_url).pack(side="left", padx=(8, 0))
 
         self.server_status_var = tk.StringVar(value="Server is stopped.")
         ttk.Label(self.server_tab, textvariable=self.server_status_var, font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=18)
@@ -413,6 +416,19 @@ class UtilityHub(tk.Tk):
             webbrowser.open(self.server_url)
         else:
             messagebox.showinfo(APP_TITLE, "Start the server first.")
+
+    def copy_server_url(self) -> None:
+        if not self.server or not self.server_url:
+            messagebox.showinfo(APP_TITLE, "Start the server before copying its URL.")
+            return
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(self.server_url)
+            self.update_idletasks()
+        except tk.TclError as exc:
+            messagebox.showerror(APP_TITLE, f"Could not copy the server URL.\n\n{exc}")
+            return
+        self.status_var.set("Server URL copied to clipboard")
 
     def start_clicker(self) -> None:
         if self.auto_clicking:

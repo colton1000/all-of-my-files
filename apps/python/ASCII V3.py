@@ -1,6 +1,4 @@
 import random
-import os
-import shutil
 import time
 
 
@@ -105,7 +103,39 @@ ascii_art = {
          \              /
           '-.________.-'
         """
-    ]
+    ],
+    "advanced-space": [
+        r"""
+                 .          *       .
+            *         .-.
+                 .   (   )     *
+          .          `-'       .       *
+                  *       .         .
+        """,
+        r"""
+             .       *       .
+        *        .        .       *
+             ____             .
+          .-'    `-.    *
+         /  .--.    \
+         | (____)   |       .
+          \        /
+        *  `-.__.-'      .
+        """,
+    ],
+    "advanced-vehicles": [
+        r"""
+             ______
+        ____/|_||_\`.__
+       (   _    _ _\  _\
+       =`-(_)--(_)-'---'
+        """,
+        r"""
+              __o
+            _ \<_
+           (_)/(_)
+        """,
+    ],
 }
 
 # ============================
@@ -171,11 +201,27 @@ def animate_bounce_text():
 
         time.sleep(0.05)
 
+def animate_starfield():
+    width = 50
+    height = 14
+    stars = [" ", " ", " ", ".", "+", "*"]
+
+    try:
+        while True:
+            print(clear_screen(), end="")
+            print("[Animation: starfield] Press Ctrl+C to return to the menu\n")
+            for _ in range(height):
+                print("".join(random.choice(stars) for _ in range(width)))
+            time.sleep(0.12)
+    except KeyboardInterrupt:
+        print(clear_screen(), end="")
+
 
 animated_generators = {
     "fire": animate_fire,
     "rain": animate_rain,
-    "bouncing-text": animate_bounce_text
+    "bouncing-text": animate_bounce_text,
+    "starfield": animate_starfield,
 }
 
 # ============================
@@ -203,19 +249,31 @@ if __name__ == "__main__":
     while True:
         print("\nADVANCED ASCII ART ENGINE")
         print("==========================")
-        print("Static:", ", ".join(ascii_art.keys()))
-        print("Animated:", ", ".join(animated_generators.keys()))
-        print("\nType a static category or animation name.")
+        print("Type a category or animation name. Commands: list, random, help, quit")
 
         choice = input("> ").strip().lower()
 
+        if choice in {"q", "quit", "exit"}:
+            break
+        if choice in {"list", "help"}:
+            print("\nStatic:", ", ".join(ascii_art))
+            print("Animated:", ", ".join(animated_generators))
+            print("Use Ctrl+C to stop an animation early.")
+            continue
+        if choice in {"random", "surprise"}:
+            choices = [("static", name) for name in ascii_art] + [
+                ("animation", name) for name in animated_generators
+            ]
+            kind, name = random.choice(choices)
+            print(f"Surprise: {name}")
+            if kind == "static":
+                generate_static(name)
+            else:
+                generate_animation(name)
+            continue
         if choice in ascii_art:
             generate_static(choice)
         elif choice in animated_generators:
             generate_animation(choice)
         else:
             print("Unknown option.")
-
-        again = input("\nGenerate again (y/n): ").strip().lower()
-        if again != "y":
-            break

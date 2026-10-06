@@ -20,6 +20,20 @@
             box-sizing: border-box;
         }
 
+        :focus-visible {
+            outline: 3px solid var(--highlight);
+            outline-offset: 3px;
+        }
+
+        button {
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -702,6 +716,15 @@
             .minute-hand { height: 75px; }
             .second-hand { height: 90px; }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -716,11 +739,12 @@
         <!-- Clock Section -->
         <div class="clock-section">
             <div class="clock-selector">
-                <button class="clock-btn active" onclick="setClockStyle('digital')">Digital</button>
-                <button class="clock-btn" onclick="setClockStyle('analog')">Analog</button>
-                <button class="clock-btn" onclick="setClockStyle('binary')">Binary</button>
-                <button class="clock-btn" onclick="setClockStyle('word')">Word</button>
-                <button class="clock-btn" onclick="setClockStyle('roman')">Roman</button>
+                <button class="clock-btn active" onclick="setClockStyle('digital', this)">Digital</button>
+                <button class="clock-btn" onclick="setClockStyle('analog', this)">Analog</button>
+                <button class="clock-btn" onclick="setClockStyle('binary', this)">Binary</button>
+                <button class="clock-btn" onclick="setClockStyle('word', this)">Word</button>
+                <button class="clock-btn" onclick="setClockStyle('roman', this)">Roman</button>
+                <button class="clock-btn" id="timeFormat" aria-pressed="false" onclick="toggleTimeFormat()">12-hour time</button>
             </div>
 
             <!-- Digital Clock -->
@@ -823,6 +847,7 @@
         // ============ CONFIGURATION ============
         const currentYear = new Date().getFullYear();
         let currentClockStyle = 'digital';
+        let use24HourTime = false;
 
         // Timezones
         const timezones = [
@@ -1014,10 +1039,10 @@
         }
 
         // ============ CLOCK STYLES ============
-        function setClockStyle(style) {
+        function setClockStyle(style, button) {
             currentClockStyle = style;
             document.querySelectorAll('.clock-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            button.classList.add('active');
 
             document.getElementById('digital-clock').style.display = 'none';
             document.getElementById('analog-clock').style.display = 'none';
@@ -1029,6 +1054,14 @@
             
             // Initialize binary clock dots
             if (style === 'binary') initBinaryClock();
+        }
+
+        function toggleTimeFormat() {
+            use24HourTime = !use24HourTime;
+            const button = document.getElementById('timeFormat');
+            button.textContent = use24HourTime ? '24-hour time' : '12-hour time';
+            button.setAttribute('aria-pressed', String(use24HourTime));
+            updateDigitalClock(new Date());
         }
 
         function initBinaryClock() {
@@ -1045,7 +1078,12 @@
         }
 
         function updateDigitalClock(date) {
-            const time = date.toLocaleTimeString();
+            const time = date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: !use24HourTime
+            });
             document.getElementById('digital-time').textContent = time;
             document.getElementById('digital-date').textContent = date.toLocaleDateString('en-US', {
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'

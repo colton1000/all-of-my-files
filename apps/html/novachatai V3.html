@@ -2,37 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d18">
   <title>NovaChat — GPT‑4o API Playground</title>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080d18;
+      --surface: #101a2a;
+      --surface-raised: #152238;
+      --line: #25344c;
+      --text: #edf3ff;
+      --muted: #95a6c0;
+      --accent: #8b7cff;
+      --accent-bright: #6f8cff;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
+      background: var(--bg);
+      color: var(--text);
       margin: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 100dvh;
+      min-height: 520px;
     }
 
     header {
-      padding: 16px 24px;
-      border-bottom: 1px solid #1f2937;
-      background: #020617;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--line);
+      background: #0b1220;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
     }
 
     header h1 {
       margin: 0;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
+      letter-spacing: -.02em;
     }
 
     header span {
       font-size: 0.85rem;
-      color: #9ca3af;
+      color: var(--muted);
     }
+
+    .brand-mark { color: var(--accent); margin-right: 7px; }
+    .header-meta { text-align: right; white-space: nowrap; }
 
     main {
       display: flex;
@@ -42,10 +64,10 @@
 
     .sidebar {
       width: 320px;
-      border-right: 1px solid #1f2937;
+      border-right: 1px solid var(--line);
       padding: 16px;
       box-sizing: border-box;
-      background: #020617;
+      background: #0b1220;
       overflow-y: auto;
     }
 
@@ -60,7 +82,7 @@
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #9ca3af;
+      color: var(--muted);
       margin-bottom: 8px;
     }
 
@@ -77,7 +99,7 @@
     }
 
     .control-label-row span.value {
-      color: #a5b4fc;
+      color: #b8b1ff;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 0.8rem;
     }
@@ -100,7 +122,7 @@
     }
 
     .toggle-row small {
-      color: #6b7280;
+      color: #8091aa;
       font-size: 0.75rem;
     }
 
@@ -121,7 +143,7 @@
       position: absolute;
       cursor: pointer;
       inset: 0;
-      background-color: #4b5563;
+      background-color: #3b4a63;
       transition: .2s;
       border-radius: 999px;
     }
@@ -139,7 +161,7 @@
     }
 
     .switch input:checked + .slider-switch {
-      background-color: #4f46e5;
+      background-color: var(--accent);
     }
 
     .switch input:checked + .slider-switch:before {
@@ -151,83 +173,127 @@
       padding: 16px;
       box-sizing: border-box;
       overflow-y: auto;
-      background: radial-gradient(circle at top left, #111827, #020617);
+      background: radial-gradient(circle at top left, #17243a, #080d18 62%);
     }
 
     .message {
-      max-width: 70%;
-      margin-bottom: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
+      max-width: min(78%, 760px);
+      margin-bottom: 5px;
+      padding: 12px 15px;
+      border-radius: 15px;
       font-size: 0.95rem;
       line-height: 1.4;
       white-space: pre-wrap;
-      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      box-shadow: 0 8px 24px #0002;
     }
 
     .message.user {
       margin-left: auto;
-      background: #4b5563;
-      border-bottom-right-radius: 2px;
+      background: linear-gradient(140deg, #45516a, #34445f);
+      border-bottom-right-radius: 4px;
     }
 
     .message.ai {
       margin-right: auto;
-      background: #111827;
-      border-bottom-left-radius: 2px;
-      border: 1px solid #1f2937;
+      background: var(--surface);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--line);
     }
 
     .meta {
       font-size: 0.7rem;
-      color: #9ca3af;
+      color: var(--muted);
       margin-bottom: 4px;
     }
 
     .input-bar {
       padding: 10px 16px;
-      border-top: 1px solid #1f2937;
-      background: #020617;
+      border-top: 1px solid var(--line);
+      background: #0b1220;
       display: flex;
       gap: 10px;
-      align-items: center;
+      align-items: flex-end;
     }
 
     .input-bar textarea {
       flex: 1;
       resize: none;
-      height: 48px;
-      border-radius: 8px;
-      border: 1px solid #1f2937;
-      background: #020617;
-      color: #e5e7eb;
-      padding: 8px 10px;
+      min-height: 48px;
+      max-height: 180px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #0a1120;
+      color: var(--text);
+      padding: 12px 13px;
       font-family: inherit;
       font-size: 0.9rem;
     }
 
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 8px 11px;
+      color: var(--text);
+      background: var(--surface-raised);
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: #63769b;
+      background: #1d2d47;
+      transform: translateY(-1px);
+    }
+
+    button:disabled { cursor: wait; opacity: .7; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--accent-bright);
+      outline-offset: 2px;
+    }
+
     .input-bar button {
       border: none;
-      border-radius: 8px;
-      padding: 10px 14px;
-      cursor: pointer;
+      border-radius: 11px;
+      padding: 12px 16px;
       font-size: 0.9rem;
-      font-weight: 500;
+      font-weight: 650;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
     .btn-primary {
-      background: #4f46e5;
-      color: #e5e7eb;
+      background: linear-gradient(135deg, #7167ee, #527fe9);
+      color: #fff;
+      box-shadow: 0 8px 22px #665de333;
     }
 
     .btn-primary:disabled {
-      background: #312e81;
-      cursor: default;
-      opacity: 0.7;
+      background: #3d426a;
     }
+
+    .chat-toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 16px 0;
+      background: #0b1220;
+    }
+    .chat-toolbar .spacer { flex: 1; }
+    .chat-count { color: var(--muted); font-size: .76rem; }
+    .message-actions { display: flex; gap: 6px; margin: 0 0 12px 2px; }
+    .message-actions button { font-size: .75rem; padding: 5px 8px; }
+    .key-row { display: flex; gap: 6px; align-items: stretch; }
+    .key-row input { min-width: 0; flex: 1; }
+    .key-help { color: var(--muted); font-size: .72rem; line-height: 1.45; margin-top: 5px; }
+    .status-bar { min-height: 2.5em; }
+    .quick-prompts { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 12px; }
+    .quick-prompts button { font-size: .76rem; }
 
     .options-row {
       display: flex;
@@ -241,25 +307,25 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      color: #d1d5db;
+      color: #d1d9e7;
     }
 
     .options-row input[type="checkbox"] {
-      accent-color: #4f46e5;
+      accent-color: var(--accent);
     }
 
     .small-input-label {
       font-size: 0.8rem;
       margin-top: 10px;
       margin-bottom: 4px;
-      color: #9ca3af;
+      color: var(--muted);
     }
 
     #systemPrompt {
-      background: #020617;
-      border: 1px solid #1f2937;
+      background: #0a1120;
+      border: 1px solid var(--line);
       border-radius: 6px;
-      color: #e5e7eb;
+      color: var(--text);
       padding: 6px 8px;
       font-size: 0.8rem;
       resize: vertical;
@@ -271,7 +337,7 @@
 
     .status-bar {
       font-size: 0.8rem;
-      color: #9ca3af;
+      color: var(--muted);
       margin-top: 8px;
     }
 
@@ -283,23 +349,39 @@
       .sidebar {
         width: 100%;
         border-right: none;
-        border-bottom: 1px solid #1f2937;
+        border-bottom: 1px solid var(--line);
+        max-height: 45vh;
       }
 
       .message {
-        max-width: 85%;
+        max-width: 92%;
       }
+    }
+
+    @media (max-width: 560px) {
+      body { min-height: 100dvh; height: 100dvh; }
+      header { padding: 11px 14px; }
+      header h1 { font-size: 1rem; }
+      header span { font-size: .75rem; }
+      .header-meta { display: none; }
+      .sidebar { padding: 13px; }
+      .chat-window { padding: 12px; }
+      .input-bar { padding: 9px 10px; gap: 7px; }
+      .input-bar textarea { min-height: 44px; padding: 10px; }
+      .input-bar button { padding: 10px 12px; }
+      .chat-toolbar { padding: 9px 10px 0; }
     }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <h1>NovaChat — GPT‑4o (AIMLAPI)</h1>
-      <span>Live API playground with adjustable parameters</span>
+      <h1><span class="brand-mark">✦</span>NovaChat</h1>
+      <span>Private, configurable AI chat workspace</span>
     </div>
-    <div style="font-size:0.8rem;color:#9ca3af;">
-      Model: gpt‑4o · Non‑streaming
+    <div class="header-meta">
+      <span>GPT‑4o · AIMLAPI</span><br>
+      <span>Key is used only for direct API requests</span>
     </div>
   </header>
 
@@ -308,18 +390,15 @@
     <aside class="sidebar">
       <div class="section-title">API settings</div>
 
-      <div class="small-input-label">API key (local only)</div>
-      <input
-        type="text"
-        id="apiKeyInput"
-        placeholder="YOUR_API_KEY_HERE"
-        style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #1f2937;background:#020617;color:#e5e7eb;font-size:0.8rem;"
-      />
+      <div class="small-input-label">API key</div>
+      <div class="key-row">
+        <input type="password" id="apiKeyInput" autocomplete="off" placeholder="Paste your AIMLAPI key" aria-label="AIMLAPI key" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:#0a1120;color:var(--text);font-size:0.8rem;">
+        <button type="button" id="toggleKey" aria-label="Show API key">Show</button>
+      </div>
+      <div class="key-help">The key is not saved by NovaChat. Requests go directly to AIMLAPI from this browser.</div>
 
       <div class="small-input-label">System prompt</div>
-      <textarea id="systemPrompt">
-You are a travel agent. Be descriptive and helpful.
-      </textarea>
+      <textarea id="systemPrompt" aria-label="System prompt">You are a helpful, clear, and thoughtful assistant.</textarea>
 
       <div class="section-title" style="margin-top:16px;">Model parameters</div>
 
@@ -391,16 +470,27 @@ You are a travel agent. Be descriptive and helpful.
       <div id="chatWindow" class="chat-window">
         <div class="meta">NovaChat · System</div>
         <div class="message ai">
-          Hi, I’m NovaChat connected to GPT‑4o via AIMLAPI.  
-          Enter your API key on the left, tune the sliders, and ask me about any place in the world.
+          Welcome to NovaChat. Add your AIMLAPI key, then start a conversation. Recent turns are sent as context so follow-up questions make sense.
         </div>
       </div>
 
+      <div class="chat-toolbar">
+        <span class="chat-count" id="chatCount">0 messages</span>
+        <span class="spacer"></span>
+        <button type="button" id="exportChat">Export chat</button>
+        <button type="button" id="clearChat">New chat</button>
+      </div>
+      <div class="quick-prompts" style="padding:10px 16px 0;background:#0b1220">
+        <button type="button" data-prompt="Explain this topic in simple terms, with one practical example: ">Explain a topic</button>
+        <button type="button" data-prompt="Help me brainstorm three practical ideas for: ">Brainstorm ideas</button>
+        <button type="button" data-prompt="Create a concise step-by-step plan for: ">Make a plan</button>
+      </div>
       <div class="input-bar">
-        <textarea id="userInput" placeholder="Ask NovaChat something... (Enter to send, Shift+Enter for new line)"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Message NovaChat… (Enter to send, Shift+Enter for a new line)" aria-label="Message"></textarea>
         <button id="sendBtn" class="btn-primary">
           <span>Send</span> <span>➤</span>
         </button>
+        <button id="cancelBtn" type="button" hidden>Stop</button>
       </div>
     </section>
   </main>
@@ -427,6 +517,15 @@ You are a travel agent. Be descriptive and helpful.
     const userInput = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
     const statusBar = document.getElementById("statusBar");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const chatCount = document.getElementById("chatCount");
+    const conversation = [];
+    let activeRequest = null;
+
+    function updateChatCount() {
+      const count = conversation.length;
+      chatCount.textContent = `${count} message${count === 1 ? "" : "s"} · ${Math.ceil(count / 2)} turn${Math.ceil(count / 2) === 1 ? "" : "s"}`;
+    }
 
     // === SLIDER LABEL UPDATES ===
     maxTokensSlider.addEventListener("input", () => {
@@ -460,6 +559,23 @@ You are a travel agent. Be descriptive and helpful.
 
       chatWindow.appendChild(meta);
       chatWindow.appendChild(bubble);
+      if (role === "ai") {
+        const actions = document.createElement("div");
+        actions.className = "message-actions";
+        const copyButton = document.createElement("button");
+        copyButton.type = "button";
+        copyButton.textContent = "Copy reply";
+        copyButton.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            setStatus("Reply copied to clipboard");
+          } catch (error) {
+            setStatus("Could not access the clipboard. Select and copy the reply manually.");
+          }
+        });
+        actions.appendChild(copyButton);
+        chatWindow.appendChild(actions);
+      }
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
@@ -471,7 +587,7 @@ You are a travel agent. Be descriptive and helpful.
     function buildSystemPrompt() {
       let prompt = systemPromptInput.value.trim();
       if (!prompt) {
-        prompt = "You are a travel agent. Be descriptive and helpful.";
+        prompt = "You are a helpful, clear, and thoughtful assistant.";
       }
       if (reasoningToggle.checked) {
         prompt += " Think step by step and explain your reasoning clearly.";
@@ -486,18 +602,20 @@ You are a travel agent. Be descriptive and helpful.
     }
 
     // === CALL REAL API ===
-    async function callNovaAPI(userMessage) {
+    async function callNovaAPI(signal) {
       const apiKey = apiKeyInput.value.trim();
 
       if (!apiKey) {
         throw new Error("Please enter your API key in the sidebar first.");
       }
 
+      const context = conversation.slice(-20);
+      if (context[0]?.role === "assistant") context.shift();
       const body = {
         model: "gpt-4o",
         messages: [
           { role: "system", content: buildSystemPrompt() },
-          { role: "user", content: userMessage }
+          ...context
         ],
         max_tokens: parseInt(maxTokensSlider.value, 10),
         temperature: parseFloat(temperatureSlider.value),
@@ -511,30 +629,38 @@ You are a travel agent. Be descriptive and helpful.
           "Content-Type": "application/json",
           "Authorization": "Bearer " + apiKey
         },
+        signal,
         body: JSON.stringify(body)
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
+        const errorText = (await response.text()).slice(0, 500);
         throw new Error("API error: " + response.status + " — " + errorText);
       }
 
       const data = await response.json();
-      const content = data.choices?.[0]?.message?.content || "(No content returned)";
+      const content = data.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || !content.trim()) {
+        throw new Error("The API response did not contain a message.");
+      }
       return content;
     }
 
     // === SEND MESSAGE HANDLER ===
     async function sendMessage() {
+      if (sendBtn.disabled) return;
       const text = userInput.value.trim();
       if (!text) return;
 
       appendMessage("user", text, "You · message");
+      conversation.push({ role: "user", content: text });
+      updateChatCount();
       userInput.value = "";
       userInput.focus();
 
       sendBtn.disabled = true;
       sendBtn.textContent = "Thinking...";
+      cancelBtn.hidden = false;
       setStatus("Calling API…");
 
       const metaParams =
@@ -542,21 +668,80 @@ You are a travel agent. Be descriptive and helpful.
         `top p ${Number(topPSlider.value).toFixed(2)}, reasoning ${reasoningToggle.checked ? "on" : "off"}`;
 
       try {
-        const reply = await callNovaAPI(text);
+        activeRequest = new AbortController();
+        const reply = await callNovaAPI(activeRequest.signal);
+        conversation.push({ role: "assistant", content: reply });
+        updateChatCount();
         appendMessage("ai", reply, metaParams);
         setStatus("Ready · last call OK");
       } catch (err) {
+        if (err?.name === "AbortError") {
+          const hadPendingUser = conversation.at(-1)?.role === "user";
+          if (!hadPendingUser) return;
+          conversation.pop();
+          updateChatCount();
+          appendMessage("ai", "The request was stopped.", "NovaChat · stopped");
+          setStatus("Request stopped");
+          return;
+        }
         console.error(err);
-        appendMessage("ai", "Oops, I ran into an error:\n\n" + err.message, "NovaChat · error");
+        if (conversation.at(-1)?.role === "user") conversation.pop();
+        updateChatCount();
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        appendMessage("ai", "I couldn't complete that request.\n\n" + errorMessage, "NovaChat · error");
         setStatus("Error · see last message");
       } finally {
+        activeRequest = null;
         sendBtn.disabled = false;
         sendBtn.innerHTML = "<span>Send</span> <span>➤</span>";
+        cancelBtn.hidden = true;
       }
     }
 
     // Button click
     sendBtn.addEventListener("click", sendMessage);
+    cancelBtn.addEventListener("click", () => activeRequest?.abort());
+    document.getElementById("toggleKey").addEventListener("click", (event) => {
+      const button = event.currentTarget;
+      const showing = apiKeyInput.type === "text";
+      apiKeyInput.type = showing ? "password" : "text";
+      button.textContent = showing ? "Show" : "Hide";
+      button.setAttribute("aria-label", showing ? "Show API key" : "Hide API key");
+    });
+    document.querySelectorAll("[data-prompt]").forEach((button) => {
+      button.addEventListener("click", () => {
+        userInput.value = button.dataset.prompt;
+        userInput.focus();
+        userInput.setSelectionRange(userInput.value.length, userInput.value.length);
+      });
+    });
+    document.getElementById("clearChat").addEventListener("click", () => {
+      activeRequest?.abort();
+      conversation.length = 0;
+      chatWindow.replaceChildren();
+      appendMessage("ai", "New conversation started. Your next message will begin a fresh context.", "NovaChat · System");
+      updateChatCount();
+      setStatus("Ready · new conversation");
+    });
+    document.getElementById("exportChat").addEventListener("click", () => {
+      if (!conversation.length) {
+        setStatus("There are no messages to export yet.");
+        return;
+      }
+      const transcript = conversation.map(({ role, content }) =>
+        `${role === "user" ? "You" : "NovaChat"}\n${content}`
+      ).join("\n\n---\n\n");
+      const blob = new Blob([transcript], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `novachat-${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setStatus("Transcript exported");
+    });
 
     // Enter to send, Shift+Enter for newline
     userInput.addEventListener("keydown", (e) => {
@@ -564,6 +749,10 @@ You are a travel agent. Be descriptive and helpful.
         e.preventDefault();
         sendMessage();
       }
+    });
+    userInput.addEventListener("input", () => {
+      userInput.style.height = "auto";
+      userInput.style.height = `${Math.min(userInput.scrollHeight, 180)}px`;
     });
   </script>
 </body>
