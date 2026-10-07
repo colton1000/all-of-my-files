@@ -8,7 +8,7 @@ import argparse, json, os, re, socket, threading, time, uuid, webbrowser
 ROOT = Path(__file__).resolve().parent
 PROJECTS = ROOT / "frameforge_online_projects"
 MAX_UPLOAD = 100 * 1024 * 1024
-HTML_HINT = "frameforge_online"
+HTML_HINT = "frameforge_online_market"
 
 
 def find_html(directory: Path | None = None) -> Path:
